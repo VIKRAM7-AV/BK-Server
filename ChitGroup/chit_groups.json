@@ -1,0 +1,2509 @@
+[
+  {
+    "groupCode": "BK1A",
+    "chitValue": 100000,
+    "durationMonths": 10,
+    "monthlyContribution": 10000,
+    "dailyContribution": 350,
+    "totalDueAmount": 88000,
+    "totalDividend": 12000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 10000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 3,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 4,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 5,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 6,
+        "dividend": 1700,
+        "dueAmount": 8300,
+        "bidAmount": 22000,
+        "payment": 78000
+      },
+      {
+        "month": 7,
+        "dividend": 1200,
+        "dueAmount": 8800,
+        "bidAmount": 17000,
+        "payment": 83000
+      },
+      {
+        "month": 8,
+        "dividend": 700,
+        "dueAmount": 9300,
+        "bidAmount": 12000,
+        "payment": 88000
+      },
+      {
+        "month": 9,
+        "dividend": 400,
+        "dueAmount": 9600,
+        "bidAmount": 9000,
+        "payment": 91000
+      },
+      {
+        "month": 10,
+        "dividend": 0,
+        "dueAmount": 10000,
+        "bidAmount": 5000,
+        "payment": 95000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK1B",
+    "chitValue": 200000,
+    "durationMonths": 10,
+    "monthlyContribution": 20000,
+    "dailyContribution": 700,
+    "totalDueAmount": 176000,
+    "totalDividend": 24000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 20000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 3,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 4,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 5,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 6,
+        "dividend": 3400,
+        "dueAmount": 16600,
+        "bidAmount": 44000,
+        "payment": 156000
+      },
+      {
+        "month": 7,
+        "dividend": 2400,
+        "dueAmount": 17600,
+        "bidAmount": 34000,
+        "payment": 166000
+      },
+      {
+        "month": 8,
+        "dividend": 1400,
+        "dueAmount": 18600,
+        "bidAmount": 24000,
+        "payment": 176000
+      },
+      {
+        "month": 9,
+        "dividend": 800,
+        "dueAmount": 19200,
+        "bidAmount": 18000,
+        "payment": 182000
+      },
+      {
+        "month": 10,
+        "dividend": 0,
+        "dueAmount": 20000,
+        "bidAmount": 10000,
+        "payment": 190000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK1C",
+    "chitValue": 300000,
+    "durationMonths": 10,
+    "monthlyContribution": 30000,
+    "dailyContribution": 1000,
+    "totalDueAmount": 264000,
+    "totalDividend": 36000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 30000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 6000,
+        "dueAmount": 24000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 3,
+        "dividend": 6000,
+        "dueAmount": 24000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 4,
+        "dividend": 6000,
+        "dueAmount": 24000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 5,
+        "dividend": 6000,
+        "dueAmount": 24000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 6,
+        "dividend": 5100,
+        "dueAmount": 24900,
+        "bidAmount": 66000,
+        "payment": 234000
+      },
+      {
+        "month": 7,
+        "dividend": 3600,
+        "dueAmount": 26400,
+        "bidAmount": 51000,
+        "payment": 249000
+      },
+      {
+        "month": 8,
+        "dividend": 2100,
+        "dueAmount": 27900,
+        "bidAmount": 36000,
+        "payment": 264000
+      },
+      {
+        "month": 9,
+        "dividend": 1200,
+        "dueAmount": 28800,
+        "bidAmount": 27000,
+        "payment": 273000
+      },
+      {
+        "month": 10,
+        "dividend": 0,
+        "dueAmount": 30000,
+        "bidAmount": 15000,
+        "payment": 285000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK1D",
+    "chitValue": 500000,
+    "durationMonths": 10,
+    "monthlyContribution": 50000,
+    "dailyContribution": 1700,
+    "totalDueAmount": 440000,
+    "totalDividend": 60000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 50000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 10000,
+        "dueAmount": 40000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 3,
+        "dividend": 10000,
+        "dueAmount": 40000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 4,
+        "dividend": 10000,
+        "dueAmount": 40000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 5,
+        "dividend": 10000,
+        "dueAmount": 40000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 6,
+        "dividend": 8500,
+        "dueAmount": 41500,
+        "bidAmount": 110000,
+        "payment": 390000
+      },
+      {
+        "month": 7,
+        "dividend": 6000,
+        "dueAmount": 44000,
+        "bidAmount": 85000,
+        "payment": 415000
+      },
+      {
+        "month": 8,
+        "dividend": 3500,
+        "dueAmount": 46500,
+        "bidAmount": 60000,
+        "payment": 440000
+      },
+      {
+        "month": 9,
+        "dividend": 2000,
+        "dueAmount": 48000,
+        "bidAmount": 45000,
+        "payment": 455000
+      },
+      {
+        "month": 10,
+        "dividend": 0,
+        "dueAmount": 50000,
+        "bidAmount": 25000,
+        "payment": 475000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2A",
+    "chitValue": 100000,
+    "durationMonths": 20,
+    "monthlyContribution": 5000,
+    "dailyContribution": 200,
+    "totalDueAmount": 87500,
+    "totalDividend": 12500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 5000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 3,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 4,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 5,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 6,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 7,
+        "dividend": 1000,
+        "dueAmount": 4000,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 8,
+        "dividend": 950,
+        "dueAmount": 4050,
+        "bidAmount": 24000,
+        "payment": 76000
+      },
+      {
+        "month": 9,
+        "dividend": 900,
+        "dueAmount": 4100,
+        "bidAmount": 23000,
+        "payment": 77000
+      },
+      {
+        "month": 10,
+        "dividend": 850,
+        "dueAmount": 4150,
+        "bidAmount": 22000,
+        "payment": 78000
+      },
+      {
+        "month": 11,
+        "dividend": 775,
+        "dueAmount": 4225,
+        "bidAmount": 20500,
+        "payment": 79500
+      },
+      {
+        "month": 12,
+        "dividend": 700,
+        "dueAmount": 4300,
+        "bidAmount": 19000,
+        "payment": 81000
+      },
+      {
+        "month": 13,
+        "dividend": 600,
+        "dueAmount": 4400,
+        "bidAmount": 17000,
+        "payment": 83000
+      },
+      {
+        "month": 14,
+        "dividend": 525,
+        "dueAmount": 4475,
+        "bidAmount": 15500,
+        "payment": 84500
+      },
+      {
+        "month": 15,
+        "dividend": 450,
+        "dueAmount": 4550,
+        "bidAmount": 14000,
+        "payment": 86000
+      },
+      {
+        "month": 16,
+        "dividend": 350,
+        "dueAmount": 4650,
+        "bidAmount": 12000,
+        "payment": 88000
+      },
+      {
+        "month": 17,
+        "dividend": 200,
+        "dueAmount": 4800,
+        "bidAmount": 9000,
+        "payment": 91000
+      },
+      {
+        "month": 18,
+        "dividend": 150,
+        "dueAmount": 4850,
+        "bidAmount": 8000,
+        "payment": 92000
+      },
+      {
+        "month": 19,
+        "dividend": 50,
+        "dueAmount": 4950,
+        "bidAmount": 6000,
+        "payment": 94000
+      },
+      {
+        "month": 20,
+        "dividend": 0,
+        "dueAmount": 5000,
+        "bidAmount": 5000,
+        "payment": 95000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2B",
+    "chitValue": 200000,
+    "durationMonths": 20,
+    "monthlyContribution": 10000,
+    "dailyContribution": 350,
+    "totalDueAmount": 175000,
+    "totalDividend": 25000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 10000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 3,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 4,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 5,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 6,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 7,
+        "dividend": 2000,
+        "dueAmount": 8000,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 8,
+        "dividend": 1900,
+        "dueAmount": 8100,
+        "bidAmount": 48000,
+        "payment": 152000
+      },
+      {
+        "month": 9,
+        "dividend": 1800,
+        "dueAmount": 8200,
+        "bidAmount": 46000,
+        "payment": 154000
+      },
+      {
+        "month": 10,
+        "dividend": 1700,
+        "dueAmount": 8300,
+        "bidAmount": 44000,
+        "payment": 156000
+      },
+      {
+        "month": 11,
+        "dividend": 1550,
+        "dueAmount": 8450,
+        "bidAmount": 41000,
+        "payment": 159000
+      },
+      {
+        "month": 12,
+        "dividend": 1400,
+        "dueAmount": 8600,
+        "bidAmount": 38000,
+        "payment": 162000
+      },
+      {
+        "month": 13,
+        "dividend": 1200,
+        "dueAmount": 8800,
+        "bidAmount": 34000,
+        "payment": 166000
+      },
+      {
+        "month": 14,
+        "dividend": 1050,
+        "dueAmount": 8950,
+        "bidAmount": 31000,
+        "payment": 169000
+      },
+      {
+        "month": 15,
+        "dividend": 900,
+        "dueAmount": 9100,
+        "bidAmount": 28000,
+        "payment": 172000
+      },
+      {
+        "month": 16,
+        "dividend": 700,
+        "dueAmount": 9300,
+        "bidAmount": 24000,
+        "payment": 176000
+      },
+      {
+        "month": 17,
+        "dividend": 400,
+        "dueAmount": 9600,
+        "bidAmount": 18000,
+        "payment": 182000
+      },
+      {
+        "month": 18,
+        "dividend": 300,
+        "dueAmount": 9700,
+        "bidAmount": 16000,
+        "payment": 184000
+      },
+      {
+        "month": 19,
+        "dividend": 100,
+        "dueAmount": 9900,
+        "bidAmount": 12000,
+        "payment": 188000
+      },
+      {
+        "month": 20,
+        "dividend": 0,
+        "dueAmount": 10000,
+        "bidAmount": 10000,
+        "payment": 190000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2C",
+    "chitValue": 300000,
+    "durationMonths": 20,
+    "monthlyContribution": 15000,
+    "dailyContribution": 500,
+    "totalDueAmount": 262500,
+    "totalDividend": 37500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 15000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 3,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 4,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 5,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 6,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 7,
+        "dividend": 3000,
+        "dueAmount": 12000,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 8,
+        "dividend": 2850,
+        "dueAmount": 12150,
+        "bidAmount": 72000,
+        "payment": 228000
+      },
+      {
+        "month": 9,
+        "dividend": 2700,
+        "dueAmount": 12300,
+        "bidAmount": 69000,
+        "payment": 231000
+      },
+      {
+        "month": 10,
+        "dividend": 2550,
+        "dueAmount": 12450,
+        "bidAmount": 66000,
+        "payment": 234000
+      },
+      {
+        "month": 11,
+        "dividend": 2325,
+        "dueAmount": 12675,
+        "bidAmount": 61500,
+        "payment": 238500
+      },
+      {
+        "month": 12,
+        "dividend": 2100,
+        "dueAmount": 12900,
+        "bidAmount": 57000,
+        "payment": 243000
+      },
+      {
+        "month": 13,
+        "dividend": 1800,
+        "dueAmount": 13200,
+        "bidAmount": 51000,
+        "payment": 249000
+      },
+      {
+        "month": 14,
+        "dividend": 1575,
+        "dueAmount": 13425,
+        "bidAmount": 46500,
+        "payment": 253500
+      },
+      {
+        "month": 15,
+        "dividend": 1350,
+        "dueAmount": 13650,
+        "bidAmount": 42000,
+        "payment": 258000
+      },
+      {
+        "month": 16,
+        "dividend": 1050,
+        "dueAmount": 13950,
+        "bidAmount": 36000,
+        "payment": 264000
+      },
+      {
+        "month": 17,
+        "dividend": 600,
+        "dueAmount": 14400,
+        "bidAmount": 27000,
+        "payment": 273000
+      },
+      {
+        "month": 18,
+        "dividend": 450,
+        "dueAmount": 14550,
+        "bidAmount": 24000,
+        "payment": 276000
+      },
+      {
+        "month": 19,
+        "dividend": 150,
+        "dueAmount": 14850,
+        "bidAmount": 18000,
+        "payment": 282000
+      },
+      {
+        "month": 20,
+        "dividend": 0,
+        "dueAmount": 15000,
+        "bidAmount": 15000,
+        "payment": 285000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2D",
+    "chitValue": 500000,
+    "durationMonths": 20,
+    "monthlyContribution": 25000,
+    "dailyContribution": 850,
+    "totalDueAmount": 437500,
+    "totalDividend": 62500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 25000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 3,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 4,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 5,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 6,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 7,
+        "dividend": 5000,
+        "dueAmount": 20000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 8,
+        "dividend": 4750,
+        "dueAmount": 20250,
+        "bidAmount": 120000,
+        "payment": 380000
+      },
+      {
+        "month": 9,
+        "dividend": 4500,
+        "dueAmount": 20500,
+        "bidAmount": 115000,
+        "payment": 385000
+      },
+      {
+        "month": 10,
+        "dividend": 4250,
+        "dueAmount": 20750,
+        "bidAmount": 110000,
+        "payment": 390000
+      },
+      {
+        "month": 11,
+        "dividend": 3875,
+        "dueAmount": 21125,
+        "bidAmount": 102500,
+        "payment": 397500
+      },
+      {
+        "month": 12,
+        "dividend": 3500,
+        "dueAmount": 21500,
+        "bidAmount": 95000,
+        "payment": 405000
+      },
+      {
+        "month": 13,
+        "dividend": 3000,
+        "dueAmount": 22000,
+        "bidAmount": 85000,
+        "payment": 415000
+      },
+      {
+        "month": 14,
+        "dividend": 2625,
+        "dueAmount": 22375,
+        "bidAmount": 77500,
+        "payment": 422500
+      },
+      {
+        "month": 15,
+        "dividend": 2250,
+        "dueAmount": 22750,
+        "bidAmount": 70000,
+        "payment": 430000
+      },
+      {
+        "month": 16,
+        "dividend": 1750,
+        "dueAmount": 23250,
+        "bidAmount": 60000,
+        "payment": 440000
+      },
+      {
+        "month": 17,
+        "dividend": 1000,
+        "dueAmount": 24000,
+        "bidAmount": 45000,
+        "payment": 455000
+      },
+      {
+        "month": 18,
+        "dividend": 750,
+        "dueAmount": 24250,
+        "bidAmount": 40000,
+        "payment": 460000
+      },
+      {
+        "month": 19,
+        "dividend": 250,
+        "dueAmount": 24750,
+        "bidAmount": 30000,
+        "payment": 470000
+      },
+      {
+        "month": 20,
+        "dividend": 0,
+        "dueAmount": 25000,
+        "bidAmount": 25000,
+        "payment": 475000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3A",
+    "chitValue": 100000,
+    "durationMonths": 25,
+    "monthlyContribution": 4000,
+    "dailyContribution": 150,
+    "totalDueAmount": 87500,
+    "totalDividend": 12500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 4000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 3,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 4,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 5,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 6,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 7,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 8,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 9,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 10,
+        "dividend": 800,
+        "dueAmount": 3200,
+        "bidAmount": 25000,
+        "payment": 75000
+      },
+      {
+        "month": 11,
+        "dividend": 750,
+        "dueAmount": 3250,
+        "bidAmount": 23750,
+        "payment": 76250
+      },
+      {
+        "month": 12,
+        "dividend": 650,
+        "dueAmount": 3350,
+        "bidAmount": 21250,
+        "payment": 78750
+      },
+      {
+        "month": 13,
+        "dividend": 600,
+        "dueAmount": 3400,
+        "bidAmount": 20000,
+        "payment": 80000
+      },
+      {
+        "month": 14,
+        "dividend": 550,
+        "dueAmount": 3450,
+        "bidAmount": 18750,
+        "payment": 81250
+      },
+      {
+        "month": 15,
+        "dividend": 500,
+        "dueAmount": 3500,
+        "bidAmount": 17500,
+        "payment": 82500
+      },
+      {
+        "month": 16,
+        "dividend": 450,
+        "dueAmount": 3550,
+        "bidAmount": 16250,
+        "payment": 83750
+      },
+      {
+        "month": 17,
+        "dividend": 400,
+        "dueAmount": 3600,
+        "bidAmount": 15000,
+        "payment": 85000
+      },
+      {
+        "month": 18,
+        "dividend": 350,
+        "dueAmount": 3650,
+        "bidAmount": 13750,
+        "payment": 86250
+      },
+      {
+        "month": 19,
+        "dividend": 300,
+        "dueAmount": 3700,
+        "bidAmount": 12500,
+        "payment": 87500
+      },
+      {
+        "month": 20,
+        "dividend": 250,
+        "dueAmount": 3750,
+        "bidAmount": 11250,
+        "payment": 88750
+      },
+      {
+        "month": 21,
+        "dividend": 200,
+        "dueAmount": 3800,
+        "bidAmount": 10000,
+        "payment": 90000
+      },
+      {
+        "month": 22,
+        "dividend": 150,
+        "dueAmount": 3850,
+        "bidAmount": 8750,
+        "payment": 91250
+      },
+      {
+        "month": 23,
+        "dividend": 100,
+        "dueAmount": 3900,
+        "bidAmount": 7000,
+        "payment": 93000
+      },
+      {
+        "month": 24,
+        "dividend": 50,
+        "dueAmount": 3950,
+        "bidAmount": 6250,
+        "payment": 93750
+      },
+      {
+        "month": 25,
+        "dividend": 0,
+        "dueAmount": 4000,
+        "bidAmount": 5000,
+        "payment": 95000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3B",
+    "chitValue": 200000,
+    "durationMonths": 25,
+    "monthlyContribution": 8000,
+    "dailyContribution": 300,
+    "totalDueAmount": 175000,
+    "totalDividend": 25000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 8000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 3,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 4,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 5,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 6,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 7,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 8,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 9,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 10,
+        "dividend": 1600,
+        "dueAmount": 6400,
+        "bidAmount": 50000,
+        "payment": 150000
+      },
+      {
+        "month": 11,
+        "dividend": 1500,
+        "dueAmount": 6500,
+        "bidAmount": 47500,
+        "payment": 152500
+      },
+      {
+        "month": 12,
+        "dividend": 1300,
+        "dueAmount": 6700,
+        "bidAmount": 42500,
+        "payment": 157500
+      },
+      {
+        "month": 13,
+        "dividend": 1200,
+        "dueAmount": 6800,
+        "bidAmount": 40000,
+        "payment": 160000
+      },
+      {
+        "month": 14,
+        "dividend": 1100,
+        "dueAmount": 6900,
+        "bidAmount": 37500,
+        "payment": 162500
+      },
+      {
+        "month": 15,
+        "dividend": 1000,
+        "dueAmount": 7000,
+        "bidAmount": 35000,
+        "payment": 165000
+      },
+      {
+        "month": 16,
+        "dividend": 900,
+        "dueAmount": 7100,
+        "bidAmount": 32500,
+        "payment": 167500
+      },
+      {
+        "month": 17,
+        "dividend": 800,
+        "dueAmount": 7200,
+        "bidAmount": 30000,
+        "payment": 170000
+      },
+      {
+        "month": 18,
+        "dividend": 700,
+        "dueAmount": 7300,
+        "bidAmount": 27500,
+        "payment": 172500
+      },
+      {
+        "month": 19,
+        "dividend": 600,
+        "dueAmount": 7400,
+        "bidAmount": 25000,
+        "payment": 175000
+      },
+      {
+        "month": 20,
+        "dividend": 500,
+        "dueAmount": 7500,
+        "bidAmount": 22500,
+        "payment": 177500
+      },
+      {
+        "month": 21,
+        "dividend": 400,
+        "dueAmount": 7600,
+        "bidAmount": 20000,
+        "payment": 180000
+      },
+      {
+        "month": 22,
+        "dividend": 300,
+        "dueAmount": 7700,
+        "bidAmount": 17500,
+        "payment": 182500
+      },
+      {
+        "month": 23,
+        "dividend": 200,
+        "dueAmount": 7800,
+        "bidAmount": 14000,
+        "payment": 186000
+      },
+      {
+        "month": 24,
+        "dividend": 100,
+        "dueAmount": 7900,
+        "bidAmount": 12500,
+        "payment": 187500
+      },
+      {
+        "month": 25,
+        "dividend": 0,
+        "dueAmount": 8000,
+        "bidAmount": 10000,
+        "payment": 190000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3C",
+    "chitValue": 300000,
+    "durationMonths": 25,
+    "monthlyContribution": 12000,
+    "dailyContribution": 400,
+    "totalDueAmount": 262500,
+    "totalDividend": 37500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 12000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 3,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 4,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 5,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 6,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 7,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 8,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 9,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 10,
+        "dividend": 2400,
+        "dueAmount": 9600,
+        "bidAmount": 75000,
+        "payment": 225000
+      },
+      {
+        "month": 11,
+        "dividend": 2250,
+        "dueAmount": 9750,
+        "bidAmount": 71250,
+        "payment": 228750
+      },
+      {
+        "month": 12,
+        "dividend": 1950,
+        "dueAmount": 10050,
+        "bidAmount": 69375,
+        "payment": 230625
+      },
+      {
+        "month": 13,
+        "dividend": 1800,
+        "dueAmount": 10200,
+        "bidAmount": 63750,
+        "payment": 236250
+      },
+      {
+        "month": 14,
+        "dividend": 1650,
+        "dueAmount": 10350,
+        "bidAmount": 60000,
+        "payment": 240000
+      },
+      {
+        "month": 15,
+        "dividend": 1500,
+        "dueAmount": 10500,
+        "bidAmount": 58125,
+        "payment": 241875
+      },
+      {
+        "month": 16,
+        "dividend": 1350,
+        "dueAmount": 10650,
+        "bidAmount": 52500,
+        "payment": 247500
+      },
+      {
+        "month": 17,
+        "dividend": 1200,
+        "dueAmount": 10800,
+        "bidAmount": 48750,
+        "payment": 251250
+      },
+      {
+        "month": 18,
+        "dividend": 1050,
+        "dueAmount": 10950,
+        "bidAmount": 45000,
+        "payment": 255000
+      },
+      {
+        "month": 19,
+        "dividend": 900,
+        "dueAmount": 11100,
+        "bidAmount": 37500,
+        "payment": 262500
+      },
+      {
+        "month": 20,
+        "dividend": 750,
+        "dueAmount": 11250,
+        "bidAmount": 33750,
+        "payment": 266250
+      },
+      {
+        "month": 21,
+        "dividend": 600,
+        "dueAmount": 11400,
+        "bidAmount": 31875,
+        "payment": 268125
+      },
+      {
+        "month": 22,
+        "dividend": 450,
+        "dueAmount": 11550,
+        "bidAmount": 26250,
+        "payment": 273750
+      },
+      {
+        "month": 23,
+        "dividend": 300,
+        "dueAmount": 11700,
+        "bidAmount": 24375,
+        "payment": 275625
+      },
+      {
+        "month": 24,
+        "dividend": 150,
+        "dueAmount": 11850,
+        "bidAmount": 22500,
+        "payment": 277500
+      },
+      {
+        "month": 25,
+        "dividend": 0,
+        "dueAmount": 12000,
+        "bidAmount": 15000,
+        "payment": 285000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3D",
+    "chitValue": 500000,
+    "durationMonths": 25,
+    "monthlyContribution": 20000,
+    "dailyContribution": 650,
+    "totalDueAmount": 437500,
+    "totalDividend": 62500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dividend": 0,
+        "dueAmount": 20000,
+        "bidAmount": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 3,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 4,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 5,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 6,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 7,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 8,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 9,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 10,
+        "dividend": 4000,
+        "dueAmount": 16000,
+        "bidAmount": 125000,
+        "payment": 375000
+      },
+      {
+        "month": 11,
+        "dividend": 3750,
+        "dueAmount": 16250,
+        "bidAmount": 118750,
+        "payment": 381250
+      },
+      {
+        "month": 12,
+        "dividend": 3250,
+        "dueAmount": 16750,
+        "bidAmount": 115625,
+        "payment": 384375
+      },
+      {
+        "month": 13,
+        "dividend": 3000,
+        "dueAmount": 17000,
+        "bidAmount": 106250,
+        "payment": 393750
+      },
+      {
+        "month": 14,
+        "dividend": 2750,
+        "dueAmount": 17250,
+        "bidAmount": 100000,
+        "payment": 400000
+      },
+      {
+        "month": 15,
+        "dividend": 2500,
+        "dueAmount": 17500,
+        "bidAmount": 96875,
+        "payment": 403125
+      },
+      {
+        "month": 16,
+        "dividend": 2250,
+        "dueAmount": 17750,
+        "bidAmount": 87500,
+        "payment": 412500
+      },
+      {
+        "month": 17,
+        "dividend": 2000,
+        "dueAmount": 18000,
+        "bidAmount": 81250,
+        "payment": 418750
+      },
+      {
+        "month": 18,
+        "dividend": 1750,
+        "dueAmount": 18250,
+        "bidAmount": 75000,
+        "payment": 425000
+      },
+      {
+        "month": 19,
+        "dividend": 1500,
+        "dueAmount": 18500,
+        "bidAmount": 62500,
+        "payment": 437500
+      },
+      {
+        "month": 20,
+        "dividend": 1250,
+        "dueAmount": 18750,
+        "bidAmount": 56250,
+        "payment": 443750
+      },
+      {
+        "month": 21,
+        "dividend": 1000,
+        "dueAmount": 19000,
+        "bidAmount": 53125,
+        "payment": 446875
+      },
+      {
+        "month": 22,
+        "dividend": 750,
+        "dueAmount": 19250,
+        "bidAmount": 43750,
+        "payment": 456250
+      },
+      {
+        "month": 23,
+        "dividend": 500,
+        "dueAmount": 19500,
+        "bidAmount": 40625,
+        "payment": 459375
+      },
+      {
+        "month": 24,
+        "dividend": 250,
+        "dueAmount": 19750,
+        "bidAmount": 37500,
+        "payment": 462500
+      },
+      {
+        "month": 25,
+        "dividend": 0,
+        "dueAmount": 20000,
+        "bidAmount": 25000,
+        "payment": 475000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK1E",
+    "chitValue": 1000000,
+    "durationMonths": 10,
+    "monthlyContribution": 100000,    
+    "dailyContribution": 3400,
+    "totalDueAmount": 880000,
+    "totalDividend": 120000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 100000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 80000,
+        "bidAmount": 250000,
+        "dividend": 20000,
+        "payment": 750000
+      },
+      {
+        "month": 3,
+        "dueAmount": 80000,
+        "bidAmount": 250000,
+        "dividend": 20000,
+        "payment": 750000
+      },
+      {
+        "month": 4,
+        "dueAmount": 80000,
+        "bidAmount": 250000,
+        "dividend": 20000,
+        "payment": 750000
+      },
+      {
+        "month": 5,
+        "dueAmount": 80000,
+        "bidAmount": 250000,
+        "dividend": 20000,
+        "payment": 750000
+      },
+      {
+        "month": 6,
+        "dueAmount": 83000,
+        "bidAmount": 220000,
+        "dividend": 17000,
+        "payment": 780000
+      },
+      {
+        "month": 7,
+        "dueAmount": 88000,
+        "bidAmount": 170000,
+        "dividend": 12000,
+        "payment": 830000
+      },
+      {
+        "month": 8,
+        "dueAmount": 93000,
+        "bidAmount": 120000,
+        "dividend": 7000,
+        "payment": 880000
+      },
+      {
+        "month": 9,
+        "dueAmount": 96000,
+        "bidAmount": 90000,
+        "dividend": 4000,
+        "payment": 910000
+      },
+      {
+        "month": 10,
+        "dueAmount": 100000,
+        "bidAmount": 50000,
+        "dividend": 0,
+        "payment": 950000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK1F",
+    "chitValue": 2500000,
+    "durationMonths": 10,
+    "monthlyContribution": 250000,
+    "dailyContribution": 8400,
+    "totalDueAmount": 2200000,
+    "totalDividend": 300000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 250000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 200000,
+        "bidAmount": 625000,
+        "dividend": 50000,
+        "payment": 1875000
+      },
+      {
+        "month": 3,
+        "dueAmount": 200000,
+        "bidAmount": 625000,
+        "dividend": 50000,
+        "payment": 1875000
+      },
+      {
+        "month": 4,
+        "dueAmount": 200000,
+        "bidAmount": 625000,
+        "dividend": 50000,
+        "payment": 1875000
+      },
+      {
+        "month": 5,
+        "dueAmount": 200000,
+        "bidAmount": 625000,
+        "dividend": 50000,
+        "payment": 1875000
+      },
+      {
+        "month": 6,
+        "dueAmount": 207500,
+        "bidAmount": 550000,
+        "dividend": 42500,
+        "payment": 1950000
+      },
+      {
+        "month": 7,
+        "dueAmount": 220000,
+        "bidAmount": 425000,
+        "dividend": 30000,
+        "payment": 2075000
+      },
+      {
+        "month": 8,
+        "dueAmount": 232500,
+        "bidAmount": 300000,
+        "dividend": 17500,
+        "payment": 2200000
+      },
+      {
+        "month": 9,
+        "dueAmount": 240000,
+        "bidAmount": 225000,
+        "dividend": 10000,
+        "payment": 2275000
+      },
+      {
+        "month": 10,
+        "dueAmount": 250000,
+        "bidAmount": 125000,
+        "dividend": 0,
+        "payment": 2375000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2E",
+    "chitValue": 1000000,
+    "durationMonths": 20,
+    "monthlyContribution": 50000,
+    "dailyContribution": 1700,
+    "totalDueAmount": 875000,
+    "totalDividend": 125000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 50000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 3,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 4,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 5,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 6,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 7,
+        "dueAmount": 40000,
+        "bidAmount": 250000,
+        "dividend": 10000,
+        "payment": 750000
+      },
+      {
+        "month": 8,
+        "dueAmount": 40500,
+        "bidAmount": 240000,
+        "dividend": 9500,
+        "payment": 760000
+      },
+      {
+        "month": 9,
+        "dueAmount": 41000,
+        "bidAmount": 230000,
+        "dividend": 9000,
+        "payment": 770000
+      },
+      {
+        "month": 10,
+        "dueAmount": 41500,
+        "bidAmount": 220000,
+        "dividend": 8500,
+        "payment": 780000
+      },
+      {
+        "month": 11,
+        "dueAmount": 42250,
+        "bidAmount": 205000,
+        "dividend": 7750,
+        "payment": 795000
+      },
+      {
+        "month": 12,
+        "dueAmount": 43000,
+        "bidAmount": 190000,
+        "dividend": 7000,
+        "payment": 810000
+      },
+      {
+        "month": 13,
+        "dueAmount": 44000,
+        "bidAmount": 170000,
+        "dividend": 6000,
+        "payment": 830000
+      },
+      {
+        "month": 14,
+        "dueAmount": 44750,
+        "bidAmount": 155000,
+        "dividend": 5250,
+        "payment": 845000
+      },
+      {
+        "month": 15,
+        "dueAmount": 45500,
+        "bidAmount": 140000,
+        "dividend": 4500,
+        "payment": 860000
+      },
+      {
+        "month": 16,
+        "dueAmount": 46500,
+        "bidAmount": 120000,
+        "dividend": 3500,
+        "payment": 880000
+      },
+      {
+        "month": 17,
+        "dueAmount": 48000,
+        "bidAmount": 90000,
+        "dividend": 2000,
+        "payment": 910000
+      },
+      {
+        "month": 18,
+        "dueAmount": 48500,
+        "bidAmount": 80000,
+        "dividend": 1500,
+        "payment": 920000
+      },
+      {
+        "month": 19,
+        "dueAmount": 49500,
+        "bidAmount": 60000,
+        "dividend": 500,
+        "payment": 940000
+      },
+      {
+        "month": 20,
+        "dueAmount": 50000,
+        "bidAmount": 50000,
+        "dividend": 0,
+        "payment": 950000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3E",
+    "chitValue": 1000000,
+    "durationMonths": 25,
+    "monthlyContribution": 40000,
+    "dailyContribution": 1300,
+    "totalDueAmount": 875000,
+    "totalDividend": 125000,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 40000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 3,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 4,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 5,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 6,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 7,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 8,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 9,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 10,
+        "dueAmount": 32000,
+        "bidAmount": 250000,
+        "dividend": 8000,
+        "payment": 750000
+      },
+      {
+        "month": 11,
+        "dueAmount": 32500,
+        "bidAmount": 237500,
+        "dividend": 7500,
+        "payment": 762500
+      },
+      {
+        "month": 12,
+        "dueAmount": 33500,
+        "bidAmount": 231250,
+        "dividend": 6500,
+        "payment": 768750
+      },
+      {
+        "month": 13,
+        "dueAmount": 34000,
+        "bidAmount": 212500,
+        "dividend": 6000,
+        "payment": 787500
+      },
+      {
+        "month": 14,
+        "dueAmount": 34500,
+        "bidAmount": 200000,
+        "dividend": 5500,
+        "payment": 800000
+      },
+      {
+        "month": 15,
+        "dueAmount": 35000,
+        "bidAmount": 193750,
+        "dividend": 5000,
+        "payment": 806250
+      },
+      {
+        "month": 16,
+        "dueAmount": 35500,
+        "bidAmount": 175000,
+        "dividend": 4500,
+        "payment": 825000
+      },
+      {
+        "month": 17,
+        "dueAmount": 36000,
+        "bidAmount": 162500,
+        "dividend": 4000,
+        "payment": 837500
+      },
+      {
+        "month": 18,
+        "dueAmount": 36500,
+        "bidAmount": 150000,
+        "dividend": 3500,
+        "payment": 850000
+      },
+      {
+        "month": 19,
+        "dueAmount": 37000,
+        "bidAmount": 125000,
+        "dividend": 3000,
+        "payment": 875000
+      },
+      {
+        "month": 20,
+        "dueAmount": 37500,
+        "bidAmount": 112500,
+        "dividend": 2500,
+        "payment": 887500
+      },
+      {
+        "month": 21,
+        "dueAmount": 38000,
+        "bidAmount": 106250,
+        "dividend": 2000,
+        "payment": 893750
+      },
+      {
+        "month": 22,
+        "dueAmount": 38500,
+        "bidAmount": 87500,
+        "dividend": 1500,
+        "payment": 912500
+      },
+      {
+        "month": 23,
+        "dueAmount": 39000,
+        "bidAmount": 81250,
+        "dividend": 1000,
+        "payment": 918750
+      },
+      {
+        "month": 24,
+        "dueAmount": 39500,
+        "bidAmount": 75000,
+        "dividend": 500,
+        "payment": 925000
+      },
+      {
+        "month": 25,
+        "dueAmount": 40000,
+        "bidAmount": 50000,
+        "dividend": 0,
+        "payment": 950000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK2F",
+    "chitValue": 2500000,
+    "durationMonths": 20,
+    "monthlyContribution": 125000,
+    "dailyContribution": 4200,
+    "totalDueAmount": 2187500,
+    "totalDividend": 312500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 125000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 3,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 4,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 5,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 6,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 7,
+        "dueAmount": 100000,
+        "bidAmount": 625000,
+        "dividend": 25000,
+        "payment": 1875000
+      },
+      {
+        "month": 8,
+        "dueAmount": 101250,
+        "bidAmount": 600000,
+        "dividend": 23750,
+        "payment": 1900000
+      },
+      {
+        "month": 9,
+        "dueAmount": 102500,
+        "bidAmount": 575000,
+        "dividend": 22500,
+        "payment": 1925000
+      },
+      {
+        "month": 10,
+        "dueAmount": 103750,
+        "bidAmount": 550000,
+        "dividend": 21250,
+        "payment": 1950000
+      },
+      {
+        "month": 11,
+        "dueAmount": 105625,
+        "bidAmount": 512500,
+        "dividend": 19375,
+        "payment": 1987500
+      },
+      {
+        "month": 12,
+        "dueAmount": 107500,
+        "bidAmount": 475000,
+        "dividend": 17500,
+        "payment": 2025000
+      },
+      {
+        "month": 13,
+        "dueAmount": 110000,
+        "bidAmount": 425000,
+        "dividend": 15000,
+        "payment": 2075000
+      },
+      {
+        "month": 14,
+        "dueAmount": 111875,
+        "bidAmount": 387500,
+        "dividend": 13125,
+        "payment": 2112500
+      },
+      {
+        "month": 15,
+        "dueAmount": 113750,
+        "bidAmount": 350000,
+        "dividend": 11250,
+        "payment": 2150000
+      },
+      {
+        "month": 16,
+        "dueAmount": 116250,
+        "bidAmount": 300000,
+        "dividend": 8750,
+        "payment": 2200000
+      },
+      {
+        "month": 17,
+        "dueAmount": 120000,
+        "bidAmount": 225000,
+        "dividend": 5000,
+        "payment": 2275000
+      },
+      {
+        "month": 18,
+        "dueAmount": 121250,
+        "bidAmount": 200000,
+        "dividend": 3750,
+        "payment": 2300000
+      },
+      {
+        "month": 19,
+        "dueAmount": 123750,
+        "bidAmount": 150000,
+        "dividend": 1250,
+        "payment": 2350000
+      },
+      {
+        "month": 20,
+        "dueAmount": 125000,
+        "bidAmount": 125000,
+        "dividend": 0,
+        "payment": 2375000
+      }
+    ]
+  },
+  {
+    "groupCode": "BK3F",
+    "chitValue": 2500000,
+    "durationMonths": 25,
+    "monthlyContribution": 100000,
+    "totalDueAmount": 2187500,
+    "totalDividend": 312500,
+    "auctionTable": [
+      {
+        "month": 1,
+        "dueAmount": 100000,
+        "bidAmount": 0,
+        "dividend": 0,
+        "payment": 0
+      },
+      {
+        "month": 2,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 3,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 4,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 5,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 6,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 7,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 8,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 9,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 10,
+        "dueAmount": 80000,
+        "bidAmount": 625000,
+        "dividend": 20000,
+        "payment": 1875000
+      },
+      {
+        "month": 11,
+        "dueAmount": 81250,
+        "bidAmount": 593750,
+        "dividend": 18750,
+        "payment": 1906250
+      },
+      {
+        "month": 12,
+        "dueAmount": 83750,
+        "bidAmount": 578125,
+        "dividend": 16250,
+        "payment": 1921875
+      },
+      {
+        "month": 13,
+        "dueAmount": 85000,
+        "bidAmount": 531250,
+        "dividend": 15000,
+        "payment": 1968750
+      },
+      {
+        "month": 14,
+        "dueAmount": 86250,
+        "bidAmount": 500000,
+        "dividend": 13750,
+        "payment": 2000000
+      },
+      {
+        "month": 15,
+        "dueAmount": 87500,
+        "bidAmount": 484375,
+        "dividend": 12500,
+        "payment": 2015625
+      },
+      {
+        "month": 16,
+        "dueAmount": 88750,
+        "bidAmount": 437500,
+        "dividend": 11250,
+        "payment": 2062500
+      },
+      {
+        "month": 17,
+        "dueAmount": 90000,
+        "bidAmount": 406250,
+        "dividend": 10000,
+        "payment": 2093750
+      },
+      {
+        "month": 18,
+        "dueAmount": 91250,
+        "bidAmount": 375000,
+        "dividend": 8750,
+        "payment": 2125000
+      },
+      {
+        "month": 19,
+        "dueAmount": 92500,
+        "bidAmount": 312500,
+        "dividend": 7500,
+        "payment": 2187500
+      },
+      {
+        "month": 20,
+        "dueAmount": 93750,
+        "bidAmount": 281250,
+        "dividend": 6250,
+        "payment": 2218750
+      },
+      {
+        "month": 21,
+        "dueAmount": 95000,
+        "bidAmount": 265625,
+        "dividend": 5000,
+        "payment": 2234375
+      },
+      {
+        "month": 22,
+        "dueAmount": 96350,
+        "bidAmount": 218750,
+        "dividend": 3650,
+        "payment": 2281250
+      },
+      {
+        "month": 23,
+        "dueAmount": 97500,
+        "bidAmount": 203125,
+        "dividend": 2500,
+        "payment": 2296875
+      },
+      {
+        "month": 24,
+        "dueAmount": 98750,
+        "bidAmount": 187500,
+        "dividend": 1250,
+        "payment": 2312500
+      },
+      {
+        "month": 25,
+        "dueAmount": 100000,
+        "bidAmount": 125000,
+        "dividend": 0,
+        "payment": 2375000
+      }
+    ]
+  }
+]

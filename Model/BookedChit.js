@@ -1,0 +1,83 @@
+import mongoose from "mongoose";
+
+const auctionSchema = new mongoose.Schema({
+  month: {
+    type: Date,
+  },
+  payment: {
+    type:Number,
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  chitId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ChitGroup",
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["pending", "completed", "cancelled"],
+    default: "pending",
+  },
+});
+
+const Auction = mongoose.model("Auction", auctionSchema);
+
+const paymentSchema = new mongoose.Schema(
+  {
+    amount: { type: Number, required: true },
+    date: { type: Date, default: Date.now },
+    agentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Agent",
+      required: true,
+    },
+    route: { type: String },
+    type: { type: String, enum: ["paid", "due", "pending"], default: "pending" },
+  },
+  { _id: false }
+);
+
+const bookedChitSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    chitId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ChitGroup",
+      required: true,
+    },
+    bookingType: { type: String, enum: ["daily", "monthly"], required: true },
+    collectedAmount: { type: Number, default: 0 },
+    monthlyAmount: { type: Number, required: true },
+    status: {
+      type: String,
+      enum: ["active", "completed", "closed"],
+      default: "active",
+    },
+
+    month: { type: Date, required: true },
+    auction: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auction",
+    },
+
+    payments: [paymentSchema],
+  },
+  { timestamps: true }
+);
+
+bookedChitSchema.virtual("dueAmount").get(function () {
+  return this.monthlyAmount - this.collectedAmount;
+});
+
+const BookedChit = mongoose.model("BookedChit", bookedChitSchema);
+
+export default { BookedChit, Auction };
