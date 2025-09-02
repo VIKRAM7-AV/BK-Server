@@ -1,26 +1,16 @@
-import jwt from "jsonwebtoken";
-import User from "../Models/UserModel.js";
+import { verifyToken } from "../utils/jwt.js";
 
-const UserMiddle=async(req,res,next) => {
-    try {
-        const Token=req.cookies.token;
-        if(!Token){
-            return res.status(401).json({error:"Not authorized, no token"});
-        }
-        const decoded=jwt.verify(Token, process.env.JWT_SECRET);
-        if(!decoded){
-            return res.status(401).json({error:"Not authorized, token failed"});
-        }
-        const user=await User.findOne({_id : decoded.id}).select("-password");
-        if(!user){
-            return res.status(401).json({error:"Not authorized, user not found"});
-        }
-        req.user=user; 
-        next();        
-    } catch (error) {
-        console.log("Error in protectRoute middleware",error);
-        res.status(500).json({error:"Internal server error for protect route"});
-    }
-}
-
-export default UserMiddle;
+export const authenticateUser = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "No token provided" });
+  }
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = verifyToken(token);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
+};

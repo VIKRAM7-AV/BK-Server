@@ -4,20 +4,22 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import ChitGroup from "../Backend/Routes/ChitGroup.js";
 import UserRoute from "../Backend/Routes/UserRoute.js";
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "*", credentials: true }));
+app.use(cookieParser());
 
 // Routes
 
 app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
 
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
   res.send('Hello Backend is Work 🚀');
 });
 
