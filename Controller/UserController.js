@@ -100,7 +100,6 @@ export const NewUser = async (req, res) => {
       permanentAddress,
       occupationAddress,
       route,
-      agent,
       nominee,
     } = req.body;
 
@@ -113,7 +112,6 @@ export const NewUser = async (req, res) => {
       !permanentAddress ||
       !occupationAddress ||
       !route ||
-      !agent ||
       !nominee ||
       !nominee.name ||
       !nominee.dob ||
@@ -138,12 +136,11 @@ export const NewUser = async (req, res) => {
       permanentAddress,
       occupationAddress,
       route,
-      agent,
       nominee,
     });
 
     const savedUser = await newUser.save();
-    res.status(201).json({
+    res.status(200).json({
       message: "User created successfully",
       userId: savedUser.userId,
     });
@@ -171,12 +168,19 @@ export const me = async (req, res) => {
     } catch (err) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id).populate("chits").populate({
+      path: "chits",
+      populate: { path: "chitId", model: "ChitGroup" },
+    }).populate({
+      path: "chits",
+      populate: { path: "auction", model: "Auction" },
+    });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json({ user });
   } catch (error) {
+    console.log("Error fetching user data:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

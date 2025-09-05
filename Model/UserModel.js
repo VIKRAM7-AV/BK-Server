@@ -76,9 +76,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    agent: {
+    role: {
       type: String,
-      required: true,
+      enum: ["user", "admin","agent"],
+      default: "user",
     },
     chits: [
       {
@@ -87,6 +88,13 @@ const UserSchema = new mongoose.Schema(
         required: true
       },
     ],
+    auction: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Auction",
+        required: true
+      }
+    ]
   },
   {
     timestamps: true,

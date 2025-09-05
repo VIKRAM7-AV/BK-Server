@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 import ChitGroup from "../Backend/Routes/ChitGroup.js";
 import UserRoute from "../Backend/Routes/UserRoute.js";
 import cookieParser from 'cookie-parser';
+import morgan from "morgan";
+
 
 dotenv.config();
 
@@ -37,6 +39,11 @@ const connectDB = async () => {
 connectDB();
 
 
+// Show method, URL, status, and response time in ms
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+
+
 // Server Start
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`, ));
+    

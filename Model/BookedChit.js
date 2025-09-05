@@ -6,7 +6,6 @@ const auctionSchema = new mongoose.Schema({
   },
   payment: {
     type:Number,
-    required: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,7 +22,10 @@ const auctionSchema = new mongoose.Schema({
     enum: ["pending", "completed", "cancelled"],
     default: "pending",
   },
-});
+  auctionDate: {
+    type: Date
+  }
+}, { timestamps: true });
 
 const Auction = mongoose.model("Auction", auctionSchema);
 
@@ -34,10 +36,8 @@ const paymentSchema = new mongoose.Schema(
     agentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent",
-      required: true,
     },
-    route: { type: String },
-    type: { type: String, enum: ["paid", "due", "pending"], default: "pending" },
+    status: { type: String, enum: ["paid", "due", "pending"], default: "pending" },
   },
   { _id: false }
 );
@@ -56,6 +56,7 @@ const bookedChitSchema = new mongoose.Schema(
     },
     bookingType: { type: String, enum: ["daily", "monthly"], required: true },
     collectedAmount: { type: Number, default: 0 },
+    pendingAmount: { type: Number, default: 0 },
     monthlyAmount: { type: Number, required: true },
     status: {
       type: String,
@@ -67,6 +68,7 @@ const bookedChitSchema = new mongoose.Schema(
     auction: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auction",
+      required: true
     },
 
     payments: [paymentSchema],
@@ -80,4 +82,4 @@ bookedChitSchema.virtual("dueAmount").get(function () {
 
 const BookedChit = mongoose.model("BookedChit", bookedChitSchema);
 
-export default { BookedChit, Auction };
+export { BookedChit, Auction };
