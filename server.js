@@ -6,6 +6,7 @@ import ChitGroup from "../Backend/Routes/ChitGroup.js";
 import UserRoute from "../Backend/Routes/UserRoute.js";
 import cookieParser from 'cookie-parser';
 import morgan from "morgan";
+import NotificationRoute from "../Backend/Routes/Notification.js";
 
 
 dotenv.config();
@@ -18,8 +19,10 @@ app.use(cookieParser());
 
 // Routes
 
+
 app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
+app.use('/api/notify', NotificationRoute);
 
 app.get('/api/test', (req, res) => {
   res.send('Hello Backend is Work 🚀');

@@ -19,7 +19,7 @@ const auctionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "completed", "cancelled"],
+    enum: ["pending", "complete", "cancel"],
     default: "pending",
   },
   auctionDate: {

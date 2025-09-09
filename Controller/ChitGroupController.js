@@ -41,10 +41,6 @@ export const BookingChit = async (req, res) => {
     const userId = id;
     const { chitId, bookingType } = req.body;
 
-    console.log("Chit ID:", chitId);
-    console.log("User ID:", userId);
-    console.log("Booking Type:", bookingType);
-
     if (!chitId || !userId || !bookingType) {
       return res
         .status(400)

@@ -168,13 +168,20 @@ export const me = async (req, res) => {
     } catch (err) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
-    const user = await User.findById(decoded.id).populate("chits").populate({
+    const user = await User.findById(decoded.id)
+      .populate({
       path: "chits",
-      populate: { path: "chitId", model: "ChitGroup" },
-    }).populate({
-      path: "chits",
-      populate: { path: "auction", model: "Auction" },
-    });
+      populate: [
+        { path: "chitId", model: "ChitGroup" },
+        { path: "auction", model: "Auction" }
+      ]
+      })
+      .populate({
+      path: "auction",
+      populate: [
+        { path: "chitId", model: "ChitGroup" }
+      ]
+      });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
