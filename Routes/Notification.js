@@ -1,6 +1,7 @@
 import express from "express";
 import User from "../Model/UserModel.js";
 import { saveNotificationId } from "../utils/notificationHelper.js";
+import Notification from '../Model/notification.js';
 
 const router = express.Router();
 
@@ -76,6 +77,17 @@ router.post("/monthly", async (req, res) => {
     console.error('Monthly reminder error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
+});
+
+router.get("/:id", async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: req.params.id }).populate('chitId');
+
+        res.json(notifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
 });
 
 export default router;
