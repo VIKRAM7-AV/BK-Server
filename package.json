@@ -14,10 +14,12 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
+    "corn": "^0.0.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "expo-server-sdk": "^4.0.0",
     "express": "^5.1.0",
+    "firebase": "^12.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.1",
     "morgan": "^1.10.1"
