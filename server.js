@@ -10,6 +10,7 @@ import NotificationRoute from './Routes/Notification.js';
 import bodyParser from 'body-parser';
 import * as firebaseServices from './firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
+import EnquiryRoute from './Routes/EnquiryRoute.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
 app.use('/api/notify', NotificationRoute);
+app.use('/api/enquiry', EnquiryRoute);
 
 // Save push token
 app.post('/registerpushtoken', async (req, res) => {

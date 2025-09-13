@@ -13,9 +13,9 @@ export const SetPin = async (req, res) => {
       return res.status(400).json({ message: "Phone number mismatch" });
     }
 
-    const { pin, rePin } = req.body;
-    if (pin !== rePin) {
-      return res.status(400).json({ message: "PINs do not match" });
+    const { pin } = req.body;
+    if (!pin || pin.length < 4) {
+      return res.status(400).json({ message: "PIN must be at least 4 characters long" });
     }
     const salt = await bcrypt.genSalt(10);
     const hashedPin = await bcrypt.hash(pin, salt);
@@ -29,6 +29,36 @@ export const SetPin = async (req, res) => {
   }
 };
 
+
+export const ForgetPin = async (req, res) => {
+  try {
+    const { userId, phone, username } = req.body;
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.phone !== phone) {
+      return res.status(400).json({ message: "Phone number mismatch" });
+    }
+    if (user.name !== username) {
+      return res.status(400).json({ message: "Username mismatch" });
+    }
+
+    const { pin } = req.body;
+    if (!pin || pin.length < 4) {
+      return res.status(400).json({ message: "PIN must be at least 4 characters long" });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPin = await bcrypt.hash(pin, salt);
+
+    user.password = hashedPin;
+    await user.save();
+    res.status(200).json({ message: "PIN set successfully" });
+  } catch (error) {
+    console.error("Error setting PIN:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const LoginCon = async (req, res) => {
   try {
@@ -56,6 +86,7 @@ export const LoginCon = async (req, res) => {
       accessToken,
       refreshToken,
     });
+    res.status(200).json({ message: "Login successful", accessToken, refreshToken });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Internal server error" });
