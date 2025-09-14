@@ -11,6 +11,7 @@ import bodyParser from 'body-parser';
 import * as firebaseServices from './firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
 import EnquiryRoute from './Routes/EnquiryRoute.js';
+import User from './Model/UserModel.js';
 
 dotenv.config();
 
@@ -33,35 +34,33 @@ app.use('/api/user', UserRoute);
 app.use('/api/notify', NotificationRoute);
 app.use('/api/enquiry', EnquiryRoute);
 
-// Save push token
-app.post('/registerpushtoken', async (req, res) => {
-  try {
-    const { userId, token } = req.body;
-    if (!userId || !token) {
-      return res.status(400).json({ success: false, message: 'User ID and token required' });
-    }
-    await firebaseServices.saveToken(userId, token);
-    res.status(200).json({ success: true, message: 'Token saved' });
-  } catch (error) {
-    console.error('Error saving push token:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
 
-// Send push notification
 app.post('/getpushtoken', async (req, res) => {
   try {
-    const userId = "68b8055418cf239372c1b92a"; // Replace with dynamic userId if needed
-    const tokenData = await firebaseServices.getToken(userId);
-
-    if (!tokenData || !tokenData.token) {
-      return res.status(404).json({ success: false, message: 'Push token not found for user' });
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Valid User ID required' });
     }
 
+    console.log('Fetching push token for userId:', userId);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    console.log('User found:', user);
+    const pushToken = user.expoPushToken;
+
+    if (!pushToken || typeof pushToken !== 'string') {
+      return res.status(404).json({ success: false, message: 'Push token not found or invalid' });
+    }
+
+    // Build message
     const messages = [{
-      to: tokenData.token,
+      to: pushToken,
       sound: 'default',
-      title: 'Tesjuhhhhht',
+      title: 'Test Notification',
       body: 'This is a test notification',
     }];
 
@@ -73,7 +72,7 @@ app.post('/getpushtoken', async (req, res) => {
         const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
         tickets.push(...ticketChunk);
       } catch (error) {
-        console.error('Error sending push notification:', error);
+        console.error('Error sending push notification for chunk:', error);
       }
     }
 
@@ -84,29 +83,9 @@ app.post('/getpushtoken', async (req, res) => {
   }
 });
 
-// Save Expo push token to MongoDB
-app.post('/user/save-expo-token', async (req, res) => {
-  try {
-    const { userId, token } = req.body;
-    if (!userId || !token) {
-      return res.status(400).json({ success: false, message: 'User ID and token required' });
-    }
 
-    const updatedUser = await User.updateOne(
-      { _id: userId },
-      { $set: { expoPushToken: token } }
-    );
 
-    if (updatedUser.modifiedCount === 0) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
 
-    res.status(200).json({ success: true, message: 'Expo push token saved' });
-  } catch (error) {
-    console.error('Error saving Expo token:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
 
 // MongoDB Connection
 const connectDB = async () => {

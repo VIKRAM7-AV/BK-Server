@@ -46,7 +46,7 @@ export const getToken = async (userId) => {
       console.log(`⚠️ No token found for user: ${userId}`);
       return null;
     }
-    return tokenData; // Return the entire object { token: "..." }
+    return tokenData; 
   } catch (error) {
     console.error('❌ Error retrieving token:', error);
     throw error;

@@ -1,7 +1,6 @@
 import express from "express";
 import User from "../Model/UserModel.js";
 import Notification from "../Model/notification.js";
-import { saveNotificationId } from "../utils/notificationHelper.js";
 import { Expo } from "expo-server-sdk";
 
 const expo = new Expo();
@@ -12,7 +11,7 @@ router.post("/monthly", async (req, res) => {
     const users = await User.find().populate("chits");
 
     const today = new Date();
-    const month = today.getUTCMonth() + 1; // 1-indexed, UTC
+    const month = today.getUTCMonth() + 1;
     const year = today.getUTCFullYear();
     let remindersSent = 0;
     let notificationsSaved = 0;

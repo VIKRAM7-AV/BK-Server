@@ -1,5 +1,6 @@
 import User from "../Model/UserModel.js";
 import bcrypt from "bcrypt";
+import * as firebaseServices from '../firebaseServices.js';
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt.js";
 
 export const SetPin = async (req, res) => {
@@ -20,14 +21,56 @@ export const SetPin = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPin = await bcrypt.hash(pin, salt);
 
+    if(user.password === "0000"){      
     user.password = hashedPin;
     await user.save();
     res.status(200).json({ message: "PIN set successfully" });
+    } else {
+      res.status(400).json({ message: "Please Reset a your PIN" });
+    }
   } catch (error) {
     console.error("Error setting PIN:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const ChangePin = async (req, res) => {
+  try {
+    const { pin , userId } = req.body;
+
+    if (!pin) {
+      return res.status(400).json({ message: "PIN is required." });
+    }
+
+    if (pin.length < 4) {
+      return res.status(400).json({ message: "PIN must be at least 4 digits." });
+    }
+
+    const user = await User.findById(userId);
+
+    console.log(user, userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPin = await bcrypt.hash(pin, salt);
+
+    // Save the PIN and mark it as set
+    user.password = hashedPin;
+    await user.save();
+
+    res.status(200).json({ message: "New PIN set successfully." });
+
+  } catch (error) {
+    console.error("Error setting PIN:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 
 
 export const ForgetPin = async (req, res) => {
@@ -51,9 +94,13 @@ export const ForgetPin = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPin = await bcrypt.hash(pin, salt);
 
-    user.password = hashedPin;
-    await user.save();
-    res.status(200).json({ message: "PIN set successfully" });
+    if(user.password !== "0000"){
+      user.password = hashedPin;
+      await user.save();
+      res.status(200).json({ message: "PIN Reset successfully" });
+    } else {
+      res.status(400).json({ message: "Please set a new PIN" });
+    }
   } catch (error) {
     console.error("Error setting PIN:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -118,6 +165,28 @@ export const RefreshTokenCon = async (req, res) => {
   }
 };
 
+
+export const TokenPush = async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      return res.status(400).json({ success: false, message: 'User ID and token required' });
+    }
+
+    const user = await User.updateOne(
+      { _id: userId },
+      { $set: { expoPushToken: token } }
+    );
+    if (user.modifiedCount === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    await firebaseServices.saveToken(userId, { expoPushToken: token });
+    res.status(200).json({ success: true, message: 'Token saved' });
+  } catch (error) {
+    console.error('Error saving push token:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
 
 
 export const NewUser = async (req, res) => {

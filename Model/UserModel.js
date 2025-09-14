@@ -81,6 +81,9 @@ const UserSchema = new mongoose.Schema(
       enum: ["user", "admin","agent"],
       default: "user",
     },
+    expoPushToken: {
+      type: String,
+    },
     chits: [
       {
         type: mongoose.Schema.Types.ObjectId,
