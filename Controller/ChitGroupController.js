@@ -1,6 +1,12 @@
 import { BookedChit, Auction } from "../Model/BookedChit.js";
 import ChitGroup from "../Model/ChitGroup.js";
 import User from "../Model/UserModel.js";
+import { Expo } from 'expo-server-sdk';
+import Notification from "../Model/notification.js";
+
+
+const expo = new Expo();
+
 
 export const ChitGroupController = async (req, res) => {
   try {
@@ -88,6 +94,8 @@ export const BookingChit = async (req, res) => {
   }
 };
 
+
+
 export const payment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,10 +110,7 @@ export const payment = async (req, res) => {
       bookedChit._id,
       {
         $push: {
-          payments: {
-            amount: amount,
-            status: status
-          },
+          payments: { amount, status },
         },
       },
       { new: true }
@@ -114,13 +119,73 @@ export const payment = async (req, res) => {
     if (status === "paid") {
       entryPayment.collectedAmount += amount;
       entryPayment.pendingAmount = Math.max(0, entryPayment.pendingAmount - amount);
+      await entryPayment.save();
     }
 
-    res
-      .status(200)
-      .json({ message: "Payment Entry Complete Successfully", entryPayment });
+    const user = await User.findById(bookedChit.userId);
+    if (user && user.expoPushToken) {
+      const pushToken = user.expoPushToken;
+
+      let title = '';
+      let body = '';
+
+      if (status === "paid") {
+        title = 'Payment Successful';
+        body = `You have paid ₹${amount} successfully!`;
+      } else if (status === "due") {
+        title = 'Payment Due';
+        body = `A payment of ₹${amount} is pending. Please complete it soon.`;
+      } else {
+        title = 'Payment Update';
+        body = `Payment of ₹${amount} has a status: ${status}`;
+      }
+
+      const messages = [{
+        to: pushToken,
+        sound: 'default',
+        title: title,
+        body: body,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+
+          // ✅ Save each notification to DB if ticket ID exists
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              const notification = new Notification({
+                userId: user._id,
+                chitId: bookedChit._id,
+                month: new Date().getMonth() + 1,
+                title: title,
+                body: body,
+                year: new Date().getFullYear(),
+                notificationId: ticket.id,
+                status: status
+              });
+
+              await notification.save();
+            }
+          }
+
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: "Payment Entry Complete Successfully",
+      entryPayment
+    });
+
   } catch (error) {
-    console.log("Error for payment status", error);
+    console.log("Error in payment function", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

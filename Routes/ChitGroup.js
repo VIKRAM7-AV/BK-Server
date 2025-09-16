@@ -1,6 +1,5 @@
 import express from "express";
 import {ChitGroupController,AllChitGroup,UserChits,BookingChit,payment} from "../Controller/ChitGroupController.js";
-import { authenticateAdmin } from "../Middleware/AdminMiddle.js";
 
 const router= express.Router();
 

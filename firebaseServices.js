@@ -1,5 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get, child } from 'firebase/database';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Firebase configuration
 const firebaseConfig = {
@@ -12,6 +15,7 @@ const firebaseConfig = {
   appId: process.env.APPID,
   measurementId: process.env.MEASUREMENTID,
 };
+
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);

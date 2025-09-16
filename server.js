@@ -31,8 +31,8 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 // Routes
 app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
-app.use('/api/notify', NotificationRoute);
 app.use('/api/enquiry', EnquiryRoute);
+app.use('/api', NotificationRoute);
 
 
 app.post('/getpushtoken', async (req, res) => {
