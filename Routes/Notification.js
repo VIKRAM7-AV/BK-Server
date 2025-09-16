@@ -1,11 +1,7 @@
 import express from "express";
 import User from "../Model/UserModel.js";
-import Notification from "../Model/notification.js";
 import { Expo } from "expo-server-sdk";
 import cron from "node-cron";
-
-console.log("📢 Notification module loaded");
-console.log("🕒 Server timezone:", process.env.TZ || "Not set");
 
 const expo = new Expo();
 const router = express.Router();
@@ -22,20 +18,15 @@ function formatAmount(value) {
 
 const processMonthlyReminders = async () => {
   try {
-    console.log(
-      "⏰ processMonthlyReminders function called at",
-      new Date().toLocaleString()
-    );
     const today = new Date();
     const day = today.getUTCDate(); // 1 to 31
     console.log(`⏱ Today is ${day}`);
 
-    if (day < 11 || day > 19) {
-      console.log(`⏱ Today is ${day}, outside 11-19 range. Skipping job.`);
+    if (day < 10 || day > 15) {
+      console.log(`⏱ Today is ${day}, outside 10-15 range. Skipping job.`);
       return;
     }
 
-    console.log(`🚀 Running monthly reminder job on day ${day}`);
 
     // ✅ Nested populate: chits and chitId
     const users = await User.find().populate({
@@ -45,7 +36,6 @@ const processMonthlyReminders = async () => {
       },
     });
 
-    console.log(`👥 Found ${users.length} users`);
 
     const currentMonth = today.getMonth() + 1; // 1-12
     const currentYear = today.getUTCFullYear();
@@ -58,9 +48,6 @@ const processMonthlyReminders = async () => {
       for (const chit of user.chits) {
         const bookingType = chit.bookingType || chit.chitId?.bookingType;
         const chitStatus = chit.status || chit.chitId?.status;
-        console.log(
-          `📋 Chit ID: ${chit._id}, Booking Type: ${bookingType}, Status: ${chitStatus}`
-        );
 
         if (bookingType === "monthly" && chitStatus === "active") {
           const auctionEntry = chit.chitId?.auctionTable?.find(
@@ -141,9 +128,6 @@ const processMonthlyReminders = async () => {
             for (const chunk of chunks) {
               try {
                 await expo.sendPushNotificationsAsync(chunk);
-                console.log(
-                  `✅ Reminder sent to ${user.name} for chit ${chit._id}`
-                );
                 remindersSent++;
               } catch (error) {
                 console.error(
@@ -165,19 +149,12 @@ const processMonthlyReminders = async () => {
       }
     }
 
-    console.log(
-      `✅ Monthly job completed. Notifications saved: ${notificationsSaved}, reminders sent: ${remindersSent}`
-    );
-    console.log("Today:", today);
-    console.log("Current month:", currentMonth);
   } catch (error) {
     console.error("❌ Error in monthly reminder job:", error);
   }
 };
 
-// ✅ Cron job for 12:31 PM IST (06:31 UTC) on 11-19th of every month
-cron.schedule("10 13 11-19 * *", () => {
-  console.log("⏰ Cron job triggered for monthly reminders at 12:31 IST");
+cron.schedule("0 9 10-15 * *", () => {
   processMonthlyReminders();
 });
 

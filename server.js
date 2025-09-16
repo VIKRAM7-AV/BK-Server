@@ -5,13 +5,11 @@ import mongoose from 'mongoose';
 import ChitGroup from './Routes/ChitGroup.js';
 import UserRoute from './Routes/UserRoute.js';
 import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
 import NotificationRoute from './Routes/Notification.js';
 import bodyParser from 'body-parser';
-import * as firebaseServices from './firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
 import EnquiryRoute from './Routes/EnquiryRoute.js';
-import User from './Model/UserModel.js';
+import Notifications from './Routes/getNotification.js';
 
 dotenv.config();
 
@@ -26,65 +24,19 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
 // Routes
 app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
 app.use('/api/enquiry', EnquiryRoute);
 app.use('/api', NotificationRoute);
+app.use('/api/notification', Notifications );
 
 
-app.post('/getpushtoken', async (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ success: false, message: 'Valid User ID required' });
-    }
 
-    console.log('Fetching push token for userId:', userId);
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    console.log('User found:', user);
-    const pushToken = user.expoPushToken;
-
-    if (!pushToken || typeof pushToken !== 'string') {
-      return res.status(404).json({ success: false, message: 'Push token not found or invalid' });
-    }
-
-    // Build message
-    const messages = [{
-      to: pushToken,
-      sound: 'default',
-      title: 'Test Notification',
-      body: 'This is a test notification',
-    }];
-
-    // Send notifications
-    const chunks = expo.chunkPushNotifications(messages);
-    const tickets = [];
-    for (const chunk of chunks) {
-      try {
-        const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-        tickets.push(...ticketChunk);
-      } catch (error) {
-        console.error('Error sending push notification for chunk:', error);
-      }
-    }
-
-    res.status(200).json({ success: true, message: 'Notification sent', tickets });
-  } catch (error) {
-    console.error('Error in /getpushtoken:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
+app.use('/test', (req, res) => {
+  res.send('API is working');
 });
-
-
-
 
 
 // MongoDB Connection
