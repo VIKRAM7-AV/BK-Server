@@ -73,12 +73,17 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
     route: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "WorkerRoute",
+      required: true
+    },
+    agent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Agent",
+      required: true
     },
     role: {
       type: String,
-      enum: ["user", "admin","agent"],
       default: "user",
     },
     expoPushToken: {

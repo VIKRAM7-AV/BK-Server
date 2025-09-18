@@ -29,18 +29,28 @@ const auctionSchema = new mongoose.Schema({
 
 const Auction = mongoose.model("Auction", auctionSchema);
 
+
+
+
+
+
 const paymentSchema = new mongoose.Schema(
   {
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
-    agentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Agent",
-    },
     status: { type: String, enum: ["paid", "due", "pending"], default: "pending" },
   },
   { _id: false }
 );
+
+
+
+
+
+
+
+
+
 
 const bookedChitSchema = new mongoose.Schema(
   {
@@ -52,6 +62,11 @@ const bookedChitSchema = new mongoose.Schema(
     chitId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ChitGroup",
+      required: true,
+    },
+    GroupUserId: {
+      type: String,
+      unique: true,
       required: true,
     },
     bookingType: { type: String, enum: ["daily", "monthly"], required: true },

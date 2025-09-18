@@ -198,6 +198,7 @@ export const NewUser = async (req, res) => {
       occupation,
       monthlyIncome,
       permanentAddress,
+      agent,
       occupationAddress,
       route,
       nominee,
@@ -212,6 +213,7 @@ export const NewUser = async (req, res) => {
       !permanentAddress ||
       !occupationAddress ||
       !route ||
+      !agent ||
       !nominee ||
       !nominee.name ||
       !nominee.dob ||
@@ -235,6 +237,7 @@ export const NewUser = async (req, res) => {
       monthlyIncome,
       permanentAddress,
       occupationAddress,
+      agent,
       route,
       nominee,
     });

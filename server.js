@@ -10,6 +10,8 @@ import bodyParser from 'body-parser';
 import { Expo } from 'expo-server-sdk';
 import EnquiryRoute from './Routes/EnquiryRoute.js';
 import Notifications from './Routes/getNotification.js';
+import AgentRoute from './Routes/agentRoute.js';
+import WorkerRoute from './Routes/WorkerRoute.js';
 
 dotenv.config();
 
@@ -30,7 +32,9 @@ app.use('/api/chit-group', ChitGroup);
 app.use('/api/user', UserRoute);
 app.use('/api/enquiry', EnquiryRoute);
 app.use('/api', NotificationRoute);
-app.use('/api/notification', Notifications );
+app.use('/api/notification', Notifications);
+app.use('/api/agent', AgentRoute);
+app.use("/api/route",WorkerRoute);
 
 
 
