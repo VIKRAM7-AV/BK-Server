@@ -12,10 +12,13 @@ import EnquiryRoute from './Routes/EnquiryRoute.js';
 import Notifications from './Routes/getNotification.js';
 import AgentRoute from './Routes/agentRoute.js';
 import WorkerRoute from './Routes/WorkerRoute.js';
+import TaskRoute from './Routes/TaskRoute.js';
 
 dotenv.config();
 
-const app = express();
+const app = express(
+  { limit: '50mb' }
+);
 
 // Initialize Expo SDK
 const expo = new Expo();
@@ -35,6 +38,7 @@ app.use('/api', NotificationRoute);
 app.use('/api/notification', Notifications);
 app.use('/api/agent', AgentRoute);
 app.use("/api/route",WorkerRoute);
+app.use("/api/task",TaskRoute)
 
 
 

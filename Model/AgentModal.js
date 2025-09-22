@@ -33,10 +33,11 @@ const agentSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      default: "0000",
+      default: "000000",
     },
     route: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "WorkerRoute",
     },
     role: {
       type: String,
@@ -72,7 +73,7 @@ agentSchema.pre("save", async function (next) {
         { new: true, upsert: true }
       );
 
-      this.agentId = `BKAGT-${String(counterAgent.seq).padStart(4, "0")}`; // e.g., BKAGT-0001
+      this.agentId = `BKAGT-${String(counterAgent.seq)}`; 
     } catch (error) {
       return next(error);
     }

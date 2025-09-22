@@ -43,13 +43,13 @@ export const SetPin = async (req, res) => {
     }
 
     const { pin } = req.body;
-    if (!pin || pin.length < 4) {
-      return res.status(400).json({ message: "PIN must be at least 4 characters long" });
+    if (!pin || pin.length < 6) {
+      return res.status(400).json({ message: "PIN must be at least 6 characters long" });
     }
     const salt = await bcrypt.genSalt(12);
     const hashedPin = await bcrypt.hash(pin, salt);
-    
-    if(agent.password === "0000"){      
+
+    if(agent.password === "000000"){
     agent.password = hashedPin;
     await agent.save();
     res.status(200).json({ message: "PIN set successfully" });
@@ -71,8 +71,8 @@ export const ChangePin = async (req, res) => {
       return res.status(400).json({ message: "PIN is required." });
     }
 
-    if (pin.length < 4) {
-      return res.status(400).json({ message: "PIN must be at least 4 digits." });
+    if (pin.length < 6) {
+      return res.status(400).json({ message: "PIN must be at least 6 digits." });
     }
 
     const agent = await Agent.findById(userId);
@@ -114,13 +114,13 @@ export const ForgetPin = async (req, res) => {
     }
 
     const { pin } = req.body;
-    if (!pin || pin.length < 4) {
-      return res.status(400).json({ message: "PIN must be at least 4 characters long" });
+    if (!pin || pin.length < 6) {
+      return res.status(400).json({ message: "PIN must be at least 6 characters long" });
     }
     const salt = await bcrypt.genSalt(12);
     const hashedPin = await bcrypt.hash(pin, salt);
 
-    if(agent.password !== "0000"){
+    if(agent.password !== "000000"){
       agent.password = hashedPin;
       await agent.save();
       res.status(200).json({ message: "PIN Reset successfully" });
