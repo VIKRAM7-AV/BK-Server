@@ -174,6 +174,8 @@ export const BookingChit = async (req, res) => {
   }
 };
 
+
+
 export const payment = async (req, res) => {
   try {
     const { id } = req.params;

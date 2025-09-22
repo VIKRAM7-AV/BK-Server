@@ -2,9 +2,11 @@ import mongoose from "mongoose";
 
 const counterAgentSchema = new mongoose.Schema({
   _id: String,
-  seq: Number,
+  seq: {
+    type: Number,
+    default: 0,
+  },
 });
-
 
 const agentSchema = new mongoose.Schema(
   {
@@ -43,20 +45,16 @@ const agentSchema = new mongoose.Schema(
     expoPushToken: {
       type: String,
     },
-   dailyUsers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "BookedChit",
-        default: []
-      },
-    ],
+    task: {
+      type: String,
+    },
     monthlyUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "BookedChit",
-        default: []
-      }
-    ]
+        default: [],
+      },
+    ],
   },
   {
     timestamps: true,
@@ -66,21 +64,21 @@ const agentSchema = new mongoose.Schema(
 const CounterAgent = mongoose.model("CounterAgent", counterAgentSchema);
 
 agentSchema.pre("save", async function (next) {
-  if (!this.userId) {
+  if (this.isNew) {   // ✅ Only run for new documents
     try {
       const counterAgent = await CounterAgent.findOneAndUpdate(
         { _id: "agentId" },
         { $inc: { seq: 1 } },
         { new: true, upsert: true }
       );
-      this.agentId = `BKAGT-${String(counterAgent.seq).padStart(1)}`;
+
+      this.agentId = `BKAGT-${String(counterAgent.seq).padStart(4, "0")}`; // e.g., BKAGT-0001
     } catch (error) {
       return next(error);
     }
   }
   next();
 });
-
 
 const Agent = mongoose.model("Agent", agentSchema);
 
