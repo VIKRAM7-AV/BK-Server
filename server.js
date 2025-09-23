@@ -13,6 +13,8 @@ import Notifications from './Routes/getNotification.js';
 import AgentRoute from './Routes/agentRoute.js';
 import WorkerRoute from './Routes/WorkerRoute.js';
 import TaskRoute from './Routes/TaskRoute.js';
+import DailyRoute from './Routes/DailyRoute.js';
+import MonthlyRoute from './Routes/MonthlyRoute.js';
 
 dotenv.config();
 
@@ -38,7 +40,9 @@ app.use('/api', NotificationRoute);
 app.use('/api/notification', Notifications);
 app.use('/api/agent', AgentRoute);
 app.use("/api/route",WorkerRoute);
-app.use("/api/task",TaskRoute)
+app.use("/api/task",TaskRoute);
+app.use("/api/dailycollection",DailyRoute)
+app.use('/api/monthlycollection',MonthlyRoute);
 
 
 

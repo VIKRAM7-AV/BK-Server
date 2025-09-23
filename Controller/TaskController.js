@@ -28,3 +28,21 @@ export const GetTasks = async (req, res) => {
         res.status(500).json({ message: error.message });        
     }
 }
+
+export const todayTask = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    const tasks = await Task.find({
+      assignedTo: id,
+      createdAt: { $gte: startOfDay, $lt: endOfDay }
+    }).populate({ path: "assignedTo", select: "name agentId" }).populate({ path: "ReassignedTo", select: "name agentId" }).populate({ path: "Route" });
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
