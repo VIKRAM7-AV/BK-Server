@@ -250,11 +250,9 @@ export const payment = async (req, res) => {
         amount !== tableEntry.dueAmount &&
         monthIndex === 1
       ) {
-        return res
-          .status(400)
-          .json({
-            message: `Payment must be exactly ₹${tableEntry.dueAmount} for month ${monthIndex}`,
-          });
+        return res.status(400).json({
+          message: `Payment must be exactly ₹${tableEntry.dueAmount} for month ${monthIndex}`,
+        });
       }
       if (
         bookedChit.bookingType === "daily" &&
@@ -267,21 +265,28 @@ export const payment = async (req, res) => {
     }
 
     // Atomic update
-  const updateData = {
-  $push: { payments: { amount, status, monthIndex, date: new Date() } },
-};
+    const updateData = {
+      $push: { payments: { amount, status, monthIndex, date: new Date() } },
+    };
 
-if (status === "paid") {
-  updateData.$inc = { collectedAmount: amount };
-  if (amount < tableEntry.dueAmount) {
-    updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
-  } else if (amount > tableEntry.dueAmount) {
-    updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
-  }
-} else if (status === "due") {
-  updateData.$inc = { pendingAmount: amount };
-}
-
+    if (status === "paid") {
+      updateData.$inc = { collectedAmount: amount };
+      if (amount < tableEntry.dueAmount) {
+        if (monthPayments === 0) {
+          updateData.$inc.pendingAmount = -amount;
+        } else {
+          updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+        }
+      } else if (amount > tableEntry.dueAmount) {
+        if (monthPayments === 0) {
+          updateData.$inc.pendingAmount = -amount;
+        } else {
+          updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+        }
+      }
+    } else if (status === "due") {
+      updateData.$inc = { pendingAmount: amount };
+    }
 
     const entryPayment = await BookedChit.findByIdAndUpdate(
       bookedChit._id,
