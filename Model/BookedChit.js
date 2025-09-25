@@ -38,6 +38,7 @@ const paymentSchema = new mongoose.Schema(
   {
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now },
+    monthIndex: { type: Number },
     status: { type: String, enum: ["paid", "due", "pending"], default: "pending" },
   },
   { _id: false }
@@ -73,12 +74,13 @@ const bookedChitSchema = new mongoose.Schema(
     collectedAmount: { type: Number, default: 0 },
     pendingAmount: { type: Number, default: 0 },
     monthlyAmount: { type: Number, required: true },
+    dailyAmount: { type: Number, required: true },
     status: {
       type: String,
       enum: ["active", "completed", "closed"],
       default: "active",
     },
-
+    PenaltyAmount: { type: Number, default: 0 },
     month: { type: Date, required: true },
     auction: {
       type: mongoose.Schema.Types.ObjectId,
@@ -87,6 +89,7 @@ const bookedChitSchema = new mongoose.Schema(
     },
 
     payments: [paymentSchema],
+    lastDueAddedMonth: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

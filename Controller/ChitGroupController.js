@@ -5,7 +5,7 @@ import { Expo } from "expo-server-sdk";
 import Notification from "../Model/notification.js";
 import WorkerRoute from "../Model/WorkerRoute.js";
 import Agent from "../Model/AgentModal.js";
-
+import { getMonthIndex } from "../utils/dateUtils.js";
 const expo = new Expo();
 
 export const ChitGroupController = async (req, res) => {
@@ -46,7 +46,6 @@ export const BookingChit = async (req, res) => {
     const { id } = req.params;
     const userId = id;
     const { chitId, bookingType } = req.body;
-    
 
     if (!chitId || !userId || !bookingType) {
       return res
@@ -64,10 +63,9 @@ export const BookingChit = async (req, res) => {
       return res.status(404).json({ message: "Chit not found" });
     }
 
+    // gorup user id create
 
-  // gorup user id create
-
-  const branchCode = "001"; 
+    const branchCode = "001";
 
     // Validate chit group
     const groupCode = chit.groupCode;
@@ -87,8 +85,7 @@ export const BookingChit = async (req, res) => {
     const existingBooking = await BookedChit.findOne({ groupUserId });
     if (existingBooking) {
       return res.status(400).json({ error: "GroupUserId already exists" });
-    }   
-
+    }
 
     let CurrectRoute;
     if (bookingType === "daily") {
@@ -110,7 +107,6 @@ export const BookingChit = async (req, res) => {
       }
     }
 
-
     let Bookagent;
     if (bookingType === "monthly") {
       const route = await User.findOne({ _id: userId }).select("agent");
@@ -131,7 +127,6 @@ export const BookingChit = async (req, res) => {
       }
     }
 
-
     const auction = new Auction({
       chitId,
       userId,
@@ -146,6 +141,7 @@ export const BookingChit = async (req, res) => {
       GroupUserId: groupUserId,
       bookingType,
       monthlyAmount: chit.monthlyContribution,
+      dailyAmount: chit.dailyContribution,
       auction: auction._id,
       collectedAmount: 0,
       status: "active",
@@ -174,87 +170,156 @@ export const BookingChit = async (req, res) => {
   }
 };
 
-
-
 export const payment = async (req, res) => {
   try {
     const { id } = req.params;
     const { amount, status } = req.body;
 
-    const bookedChit = await BookedChit.findById(id);
+    // Basic manual validation
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Amount must be a positive number" });
+    }
+    if (!["paid", "due"].includes(status)) {
+      return res
+        .status(400)
+        .json({ message: 'Status must be either "paid" or "due"' });
+    }
+
+    // Fetch booked chit with user data
+    let bookedChit = await BookedChit.findById(id).populate("userId");
     if (!bookedChit) {
       return res.status(404).json({ message: "Booked Chit not found" });
     }
 
+    // Fetch chit group for auctionTable
+    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+    if (!chitGroup) {
+      return res.status(404).json({ message: "Chit Group not found" });
+    }
+
+    // Calculate monthIndex
+    const monthIndex = getMonthIndex(bookedChit.month);
+    if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
+      return res
+        .status(400)
+        .json({ message: "Current month is invalid for this chit" });
+    }
+
+    // Get auctionTable entry for current month
+    const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+    if (!tableEntry) {
+      return res
+        .status(400)
+        .json({ message: "No auctionTable entry for this month" });
+    }
+
+    // Calculate total paid for this month
+    const monthPayments = bookedChit.payments
+      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
+      .reduce((sum, p) => sum + p.amount, 0);
+
+    // For monthly: Apply late penalty if past 15th and not paid
+    let requiredAmount = tableEntry.dueAmount;
+    if (
+      bookedChit.bookingType === "monthly" &&
+      new Date().getDate() > 15 &&
+      monthPayments === 0
+    ) {
+      requiredAmount = chitGroup.monthlyContribution;
+      const hasPenalty = bookedChit.payments.some(
+        (p) =>
+          p.monthIndex === monthIndex &&
+          p.status === "due" &&
+          p.amount === tableEntry.dividend
+      );
+      if (!hasPenalty) {
+        await BookedChit.findByIdAndUpdate(bookedChit._id, {
+          $inc: { PenaltyAmount: tableEntry.dividend },
+        });
+        // Reload bookedChit after update
+        bookedChit = await BookedChit.findById(id).populate("userId");
+      }
+    }
+
+    // Validate payment amount for 'paid'
+    if (status === "paid") {
+      if (
+        bookedChit.bookingType === "monthly" &&
+        amount !== tableEntry.dueAmount &&
+        monthIndex === 1
+      ) {
+        return res
+          .status(400)
+          .json({
+            message: `Payment must be exactly ₹${tableEntry.dueAmount} for month ${monthIndex}`,
+          });
+      }
+      if (
+        bookedChit.bookingType === "daily" &&
+        monthPayments + amount > tableEntry.dueAmount
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Payment exceeds remaining due for this month" });
+      }
+    }
+
+    // Atomic update
+  const updateData = {
+  $push: { payments: { amount, status, monthIndex, date: new Date() } },
+};
+
+if (status === "paid") {
+  updateData.$inc = { collectedAmount: amount };
+  if (amount < tableEntry.dueAmount) {
+    updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+  } else if (amount > tableEntry.dueAmount) {
+    updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+  }
+} else if (status === "due") {
+  updateData.$inc = { pendingAmount: amount };
+}
+
+
     const entryPayment = await BookedChit.findByIdAndUpdate(
       bookedChit._id,
-      {
-        $push: {
-          payments: { amount, status },
-        },
-      },
+      updateData,
       { new: true }
     );
 
-    if (status === "paid") {
-      entryPayment.collectedAmount += amount;
-      entryPayment.pendingAmount = Math.max(
-        0,
-        entryPayment.pendingAmount - amount
-      );
-      await entryPayment.save();
-    }
-
-    const user = await User.findById(bookedChit.userId);
-    if (user && user.expoPushToken) {
-      const pushToken = user.expoPushToken;
-
-      let title = "";
-      let body = "";
-
-      if (status === "paid") {
-        title = "Payment Successful";
-        body = `You have paid ₹${amount} successfully!`;
-      } else if (status === "due") {
-        title = "Payment Due";
-        body = `A payment of ₹${amount} is pending. Please complete it soon.`;
-      } else {
-        title = "Payment Update";
-        body = `Payment of ₹${amount} has a status: ${status}`;
-      }
+    // Send push notification
+    const user = bookedChit.userId;
+    if (user?.expoPushToken) {
+      const title = status === "paid" ? "Payment Successful" : "Payment Due";
+      const body =
+        status === "paid"
+          ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
+          : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
 
       const messages = [
-        {
-          to: pushToken,
-          sound: "default",
-          title: title,
-          body: body,
-        },
+        { to: user.expoPushToken, sound: "default", title, body },
       ];
-
       const chunks = expo.chunkPushNotifications(messages);
-      const tickets = [];
 
       for (const chunk of chunks) {
         try {
           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-          tickets.push(...ticketChunk);
-
-          // ✅ Save each notification to DB if ticket ID exists
           for (const ticket of ticketChunk) {
             if (ticket.id) {
-              const notification = new Notification({
+              await Notification.create({
                 userId: user._id,
                 chitId: bookedChit._id,
-                month: new Date().getMonth() + 1,
-                title: title,
-                body: body,
+                month: monthIndex,
+                title,
+                body,
                 year: new Date().getFullYear(),
                 notificationId: ticket.id,
-                status: status,
+                status,
               });
-
-              await notification.save();
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
             }
           }
         } catch (error) {
@@ -264,11 +329,11 @@ export const payment = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "Payment Entry Complete Successfully",
-      entryPayment,
+      message: "Payment Entry Completed Successfully",
+      data: { entryPayment },
     });
   } catch (error) {
-    console.log("Error in payment function", error);
+    console.error("Error in payment function:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
