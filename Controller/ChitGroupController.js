@@ -423,16 +423,16 @@ export const dailypayment = async (req, res) => {
       const hasPenalty = bookedChit.payments.some(
         (p) =>
           p.monthIndex === monthIndex &&
-          p.status === "due" &&
           p.amount === tableEntry.dividend
       );
       if (!hasPenalty) {
-        const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
-    if (!penaltyEntry) {
+      const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+      if (!penaltyEntry) {
       return res
         .status(400)
         .json({ message: "No auctionTable entry for this month" });
-    }
+      }
+      
         await BookedChit.findByIdAndUpdate(bookedChit._id, {
           $inc: { PenaltyAmount: penaltyEntry.dividend },
         });
@@ -457,7 +457,7 @@ export const dailypayment = async (req, res) => {
         updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
       } else if (bookedChit.dailyAmount > amount) {
         updateData.$inc = { collectedAmount: amount };
-        updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+        updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
       } 
     } else if (status === "due") {
       updateData.$inc = { pendingAmount: bookedChit.dailyAmount };
