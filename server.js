@@ -69,65 +69,68 @@ connectDB();
 
 
 
-// Cron: Run at 00:00 on the 10th of every month for adding dues
-cron.schedule('0 0 10 * *', async () => {
-  try {
-    const activeBookedChits = await BookedChit.find({ status: 'active' });
-    for (const bookedChit of activeBookedChits) {
-      const chitGroup = await ChitGroup.findById(bookedChit.chitId);
-      if (!chitGroup) continue;
+// // Cron: Run at 00:00 on the 10th of every month for adding dues
+// cron.schedule('0 0 10 * *', async () => {
+//   try {
+//     const activeBookedChits = await BookedChit.find({ status: 'active' });
+//     for (const bookedChit of activeBookedChits) {
+//       const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+//       if (!chitGroup) continue;
 
-      const monthIndex = getMonthIndex(bookedChit.month);
-      if (monthIndex > chitGroup.durationMonths || monthIndex <= bookedChit.lastDueAddedMonth) continue;
+//       const monthIndex = getMonthIndex(bookedChit.month);
+//       if (monthIndex > chitGroup.durationMonths || monthIndex <= bookedChit.lastDueAddedMonth) continue;
 
-      const tableEntry = chitGroup.auctionTable[monthIndex - 1];
-      if (!tableEntry) continue;
+//       const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+//       if (!tableEntry) continue;
 
-      bookedChit.pendingAmount += tableEntry.dueAmount;
-      bookedChit.lastDueAddedMonth = monthIndex;
-      await bookedChit.save();
-    }
-    console.log('Monthly dues added successfully on the 1st');
-  } catch (error) {
-    console.error('Error in monthly due cron:', error);
-  }
-});
+//       bookedChit.pendingAmount += tableEntry.dueAmount;
+//       bookedChit.lastDueAddedMonth = monthIndex;
+//       await bookedChit.save();
+//     }
+//     console.log('Monthly dues added successfully on the 1st');
+//   } catch (error) {
+//     console.error('Error in monthly due cron:', error);
+//   }
+// });
+
+
+
 
 // Cron: Run at 00:00 on the 16th of every month for adding penalties to monthly chits
-cron.schedule('0 0 16 * *', async () => {
-  try {
-    const activeMonthlyChits = await BookedChit.find({ status: 'active', bookingType: 'monthly' });
-    for (const bookedChit of activeMonthlyChits) {
-      const chitGroup = await ChitGroup.findById(bookedChit.chitId);
-      if (!chitGroup) continue;
+// cron.schedule('0 0 16 * *', async () => {
+//   try {
+//     const activeMonthlyChits = await BookedChit.find({ status: 'active', bookingType: 'monthly' });
+//     for (const bookedChit of activeMonthlyChits) {
+//       const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+//       if (!chitGroup) continue;
 
-      const monthIndex = getMonthIndex(bookedChit.month);
-      if (monthIndex > chitGroup.durationMonths) continue;
+//       const monthIndex = getMonthIndex(bookedChit.month);
+//       if (monthIndex > chitGroup.durationMonths) continue;
 
-      const tableEntry = chitGroup.auctionTable[monthIndex - 1];
-      if (!tableEntry) continue;
+//       const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+//       if (!tableEntry) continue;
 
-      const monthPaid = bookedChit.payments
-        .filter((p) => p.monthIndex === monthIndex && p.status === 'paid')
-        .reduce((sum, p) => sum + p.amount, 0);
+//       const monthPaid = bookedChit.payments
+//         .filter((p) => p.monthIndex === monthIndex && p.status === 'paid')
+//         .reduce((sum, p) => sum + p.amount, 0);
 
-      if (monthPaid > 0) continue; // Already paid something, skip
+//       if (monthPaid > 0) continue; // Already paid something, skip
 
-      const hasPenalty = bookedChit.payments.some(
-        (p) => p.monthIndex === monthIndex && p.status === 'due' && p.amount === tableEntry.dividend
-      );
+//       const hasPenalty = bookedChit.payments.some(
+//         (p) => p.monthIndex === monthIndex && p.status === 'due' && p.amount === tableEntry.dividend
+//       );
 
-      if (hasPenalty) continue;
+//       if (hasPenalty) continue;
 
-      await BookedChit.findByIdAndUpdate(bookedChit._id, {
-        $inc: { PenaltyAmount: tableEntry.dividend },
-      });
-    }
-    console.log('Monthly penalties added successfully on the 16th');
-  } catch (error) {
-    console.error('Error in monthly penalty cron:', error);
-  }
-});
+//       await BookedChit.findByIdAndUpdate(bookedChit._id, {
+//         $inc: { PenaltyAmount: tableEntry.dividend },
+//       });
+//     }
+//     console.log('Monthly penalties added successfully on the 16th');
+//   } catch (error) {
+//     console.error('Error in monthly penalty cron:', error);
+//   }
+// });
 
 
 
