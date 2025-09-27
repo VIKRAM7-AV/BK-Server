@@ -194,8 +194,10 @@ export const monthlypayment = async (req, res) => {
       return res.status(404).json({ message: "Booked Chit not found" });
     }
 
-    if(bookedChit.bookingType !== "monthly"){
-      return res.status(400).json({ message: "This is not a monthly booked chit" });
+    if (bookedChit.bookingType !== "monthly") {
+      return res
+        .status(400)
+        .json({ message: "This is not a monthly booked chit" });
     }
 
     // Fetch chit group for auctionTable
@@ -220,7 +222,7 @@ export const monthlypayment = async (req, res) => {
         .json({ message: "No auctionTable entry for this month" });
     }
 
-        // Validate payment amount for 'paid'
+    // Validate payment amount for 'paid'
     if (status === "paid") {
       if (
         bookedChit.bookingType === "monthly" &&
@@ -241,7 +243,6 @@ export const monthlypayment = async (req, res) => {
       }
     }
 
-
     // Calculate total paid for this month
     const monthPayments = bookedChit.payments
       .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
@@ -256,10 +257,7 @@ export const monthlypayment = async (req, res) => {
     ) {
       requiredAmount = chitGroup.monthlyContribution;
       const hasPenalty = bookedChit.payments.some(
-        (p) =>
-          p.monthIndex === monthIndex &&
-          p.status === "due" &&
-          p.amount === tableEntry.dividend
+        (p) => p.monthIndex === monthIndex
       );
       if (!hasPenalty) {
         await BookedChit.findByIdAndUpdate(bookedChit._id, {
@@ -270,30 +268,83 @@ export const monthlypayment = async (req, res) => {
       }
     }
 
-
-
     // Atomic update
     const updateData = {
       $push: { payments: { amount, status, monthIndex, date: new Date() } },
     };
 
-    if (status === "paid") {
-      updateData.$inc = { collectedAmount: amount };
-      if (amount < tableEntry.dueAmount) {
-        if (monthPayments === 0) {
-          updateData.$inc.pendingAmount = -amount;
-        } else {
-          updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
-        }
-      } else if (amount > tableEntry.dueAmount) {
-        if (monthPayments === 0) {
-          updateData.$inc.pendingAmount = -amount;
-        } else {
-          updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
-        }
+    // if (status === "paid") {
+    //   updateData.$inc = { collectedAmount: amount };
+
+    //   if (amount < tableEntry.dueAmount) {
+    //     const hasPaid = bookedChit.payments.some(
+    //       (p) => p.monthIndex === monthIndex
+    //     );
+    //     if (hasPaid) {
+    //       if (monthPayments === 0) {
+    //         updateData.$inc.pendingAmount = - amount;
+    //       }
+    //     } else if(monthPayments !== 0){
+    //       updateData.$inc.pendingAmount = - amount;
+    //     } else {
+    //       updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+    //     }
+    //   } else if (amount > tableEntry.dueAmount) {
+    //     const hasPaid = bookedChit.payments.some(
+    //       (p) => p.monthIndex === monthIndex
+    //     );
+    //     if (hasPaid) {
+    //       if (monthPayments === 0) {
+    //         updateData.$inc.pendingAmount = -amount;
+    //       }
+    //     } else if(monthPayments !== 0){
+    //       updateData.$inc.pendingAmount = -amount;
+    //     } else {
+    //       updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+    //     }
+    //   }
+
+  if (status === "paid") {
+  updateData.$inc = { collectedAmount: amount };
+
+  if (amount < tableEntry.dueAmount) {
+    const hasPaid = bookedChit.payments.some(
+      (p) => p.monthIndex === monthIndex
+    );
+
+    if (hasPaid) {
+      if (monthPayments >= 0) {
+        updateData.$inc.pendingAmount = -amount;
       }
-    } else if (status === "due") {
-      updateData.$inc = { pendingAmount: amount };
+    } else {
+      // first payment → reduce from pending
+      updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+    }
+  } else if (amount > tableEntry.dueAmount) {
+    const hasPaid = bookedChit.payments.some(
+      (p) => p.monthIndex === monthIndex
+    );
+
+    if (hasPaid) {
+      if (monthPayments >= 0) {
+        updateData.$inc.pendingAmount = -amount;
+      }
+    } else {
+      // first payment → reduce from pending
+      updateData.$inc.pendingAmount = tableEntry.dueAmount - amount;
+    }
+  }
+} else if (status === "due") {
+      const hasDue = bookedChit.payments.some(
+        (p) => p.monthIndex === monthIndex
+      );
+      if (hasDue) {
+        return res
+          .status(400)
+          .json({ message: "You can only mark due for the current month" });
+      } else {
+        updateData.$inc = { pendingAmount: tableEntry.dueAmount };
+      }
     }
 
     const entryPayment = await BookedChit.findByIdAndUpdate(
@@ -352,87 +403,99 @@ export const monthlypayment = async (req, res) => {
 };
 
 
+
+
+
 export const dailypayment = async (req, res) => {
   try {
     const { id } = req.params;
     const { amount, status } = req.body;
 
     if (!amount || typeof amount !== "number" || amount <= 0) {
-      return res.status(400).json({ message: "Amount must be a positive number" });
+      return res
+        .status(400)
+        .json({ message: "Amount must be a positive number" });
     }
     if (!["paid", "due"].includes(status)) {
-      return res.status(400).json({ message: 'Status must be either "paid" or "due"' });
+      return res
+        .status(400)
+        .json({ message: 'Status must be either "paid" or "due"' });
     }
 
     let bookedChit = await BookedChit.findById(id).populate("userId");
-    if (!bookedChit) return res.status(404).json({ message: "Booked Chit not found" });
+    if (!bookedChit)
+      return res.status(404).json({ message: "Booked Chit not found" });
     if (bookedChit.bookingType !== "daily") {
-      return res.status(400).json({ message: "This is not a daily booked chit" });
+      return res
+        .status(400)
+        .json({ message: "This is not a daily booked chit" });
     }
 
     const chitGroup = await ChitGroup.findById(bookedChit.chitId);
-    if (!chitGroup) return res.status(404).json({ message: "Chit Group not found" });
+    if (!chitGroup)
+      return res.status(404).json({ message: "Chit Group not found" });
 
     // ✅ Get monthIndex (10th → 9th cycle)
-   const monthIndex = getMonthIndex(bookedChit.month);
+    const monthIndex = getMonthIndex(bookedChit.month);
     if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
       return res
         .status(400)
         .json({ message: "Current month is invalid for this chit" });
     }
 
-       // Get auctionTable entry for current month
+    // Get auctionTable entry for current month
     const tableEntry = chitGroup.auctionTable[monthIndex - 1];
     if (!tableEntry) {
       return res
         .status(400)
         .json({ message: "No auctionTable entry for this month" });
     }
-    
+
     // ✅ Total paid in this month
     const monthPayments = bookedChit.payments
-    .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
-    .reduce((sum, p) => sum + p.amount, 0);
-    
-    
-
+      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
+      .reduce((sum, p) => sum + p.amount, 0);
 
     // Validate 'paid'
     if (status === "paid") {
-      if (monthPayments + amount > tableEntry.dueAmount && bookedChit.pendingAmount === 0) {
+      if (
+        monthPayments + amount > tableEntry.dueAmount &&
+        bookedChit.pendingAmount === 0
+      ) {
         return res
           .status(400)
           .json({ message: "Payment exceeds remaining due for this month" });
-      } else if (bookedChit.pendingAmount >= 0 && amount > bookedChit.pendingAmount + bookedChit.dailyAmount) {
+      } else if (
+        bookedChit.pendingAmount >= 0 &&
+        amount > bookedChit.pendingAmount + bookedChit.dailyAmount
+      ) {
         return res
           .status(400)
           .json({ message: "Payment exceeds your pending amount" });
       }
     }
 
-
-
-      // For monthly: Apply late penalty if past 15th and not paid
+    // For monthly: Apply late penalty if past 15th and not paid
     let requiredAmount = tableEntry.dueAmount;
     if (
       bookedChit.bookingType === "daily" &&
       new Date().getDate() > 9 &&
-      monthPayments === 0 && monthPayments < tableEntry.dueAmount
+      monthPayments === 0 &&
+      monthPayments < tableEntry.dueAmount
     ) {
       requiredAmount = chitGroup.monthlyContribution;
       const hasPenalty = bookedChit.payments.some(
-        (p) =>
-          p.monthIndex === monthIndex &&
-          p.amount === tableEntry.dividend
+        (p) => p.monthIndex === monthIndex
       );
+      console.log("hasPenalty", hasPenalty);
       if (!hasPenalty) {
-      const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
-      if (!penaltyEntry) {
-      return res
-        .status(400)
-        .json({ message: "No auctionTable entry for this month" });
-      }
-      
+        const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+        if (!penaltyEntry) {
+          return res
+            .status(400)
+            .json({ message: "No auctionTable entry for this month" });
+        }
+
         await BookedChit.findByIdAndUpdate(bookedChit._id, {
           $inc: { PenaltyAmount: penaltyEntry.dividend },
         });
@@ -440,9 +503,6 @@ export const dailypayment = async (req, res) => {
         bookedChit = await BookedChit.findById(id).populate("userId");
       }
     }
-
-
-
 
     // ✅ Atomic update with monthIndex
     const updateData = {
@@ -458,7 +518,7 @@ export const dailypayment = async (req, res) => {
       } else if (bookedChit.dailyAmount > amount) {
         updateData.$inc = { collectedAmount: amount };
         updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
-      } 
+      }
     } else if (status === "due") {
       updateData.$inc = { pendingAmount: bookedChit.dailyAmount };
     }
@@ -478,7 +538,9 @@ export const dailypayment = async (req, res) => {
           ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
           : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
 
-      const messages = [{ to: user.expoPushToken, sound: "default", title, body }];
+      const messages = [
+        { to: user.expoPushToken, sound: "default", title, body },
+      ];
       const chunks = expo.chunkPushNotifications(messages);
 
       for (const chunk of chunks) {
