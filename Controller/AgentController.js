@@ -239,3 +239,37 @@ export const Getme = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const DailyChits = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const agent = await Agent.findById(agentId)
+      .populate({
+        path: "route",
+        populate: [
+          {
+            path: "DailyChit",
+            populate: [
+              { path: "chitId" },
+              { 
+                path: "userId", 
+                select: "-password -expoPushToken"  // only for users
+              }
+            ]
+          }
+        ]
+      })
+      .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
+
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
+  } catch (error) {
+    console.error("Error fetching daily chits:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

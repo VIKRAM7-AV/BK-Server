@@ -477,32 +477,68 @@ export const dailypayment = async (req, res) => {
 
     // For monthly: Apply late penalty if past 15th and not paid
     let requiredAmount = tableEntry.dueAmount;
-    if (
-      bookedChit.bookingType === "daily" &&
-      new Date().getDate() > 9 &&
-      monthPayments === 0 &&
-      monthPayments < tableEntry.dueAmount
-    ) {
-      requiredAmount = chitGroup.monthlyContribution;
-      const hasPenalty = bookedChit.payments.some(
-        (p) => p.monthIndex === monthIndex
-      );
-      console.log("hasPenalty", hasPenalty);
-      if (!hasPenalty) {
-        const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
-        if (!penaltyEntry) {
-          return res
-            .status(400)
-            .json({ message: "No auctionTable entry for this month" });
-        }
+    // if (
+    //   bookedChit.bookingType === "daily" &&
+    //   new Date().getDate() > 9 &&
+    //   monthPayments === 0 &&
+    //   monthPayments < tableEntry.dueAmount
+    // ) {
+    //   requiredAmount = chitGroup.monthlyContribution;
+    //   const hasPenalty = bookedChit.payments.some(
+    //     (p) => p.monthIndex === monthIndex
+    //   );
+    //   console.log("hasPenalty", hasPenalty);
+    //   if (!hasPenalty) {
+    //     const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+    //     if (!penaltyEntry) {
+    //       return res
+    //         .status(400)
+    //         .json({ message: "No auctionTable entry for this month" });
+    //     }
 
-        await BookedChit.findByIdAndUpdate(bookedChit._id, {
-          $inc: { PenaltyAmount: penaltyEntry.dividend },
-        });
-        // Reload bookedChit after update
-        bookedChit = await BookedChit.findById(id).populate("userId");
+    //     await BookedChit.findByIdAndUpdate(bookedChit._id, {
+    //       $inc: { PenaltyAmount: penaltyEntry.dividend },
+    //     });
+    //     // Reload bookedChit after update
+    //     bookedChit = await BookedChit.findById(id).populate("userId");
+    //   }
+    // }
+    if (
+  bookedChit.bookingType === "daily" &&
+  new Date().getDate() > 9 &&
+  monthPayments === 0 &&
+  monthPayments < tableEntry.dueAmount
+) {
+  requiredAmount = chitGroup.monthlyContribution;
+
+  const hasPenalty = bookedChit.payments.some(
+    (p) => p.monthIndex === monthIndex
+  );
+  console.log("hasPenalty", hasPenalty);
+
+  if (!hasPenalty) {
+    // 🔒 prevent monthIndex - 2 < 0
+    if (monthIndex > 1) {
+      const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+      if (!penaltyEntry) {
+        return res
+          .status(400)
+          .json({ message: "No auctionTable entry for this month" });
       }
+
+      await BookedChit.findByIdAndUpdate(bookedChit._id, {
+        $inc: { PenaltyAmount: penaltyEntry.dividend },
+      });
+
+      bookedChit = await BookedChit.findById(id).populate("userId");
+    } else {
+      console.log("⚠️ First month: no penalty applied");
     }
+  }
+}
+
+
+
 
     // ✅ Atomic update with monthIndex
     const updateData = {
