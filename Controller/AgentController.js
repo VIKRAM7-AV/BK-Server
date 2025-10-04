@@ -3,6 +3,7 @@ import Agent from "../Model/AgentModal.js";
 import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
+import User from "../Model/UserModel.js";
 
 const expo = new Expo();
 
@@ -253,11 +254,100 @@ export const DailyChits = async (req, res) => {
             path: "DailyChit",
             populate: [
               { path: "chitId" },
+              { path: "auction" },
               { 
                 path: "userId", 
                 select: "-password -expoPushToken"  // only for users
               }
             ]
+          }
+        ]
+      })
+      .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
+
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
+  } catch (error) {
+    console.error("Error fetching daily chits:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+export const getallUsers = async (req, res) => {
+  try {
+    // Optionally, add query parameters to filter or limit fields
+    const { fields, role } = req.query;
+
+    // Build the query
+    let query = User.find();
+
+    // Apply role filter if provided
+    if (role) {
+      query = query.where("role").equals(role);
+    }
+
+    // Select fields dynamically or exclude sensitive ones
+    const selectFields = fields ? fields.split(",").join(" ") : "-password -expoPushToken";
+
+    const users = await query
+      .select(selectFields)
+      .populate({
+        path: "chits",
+        populate: { path: "chitId", select: "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend" },
+      })
+      .populate("agent", "name phone agentId")
+      .populate("nominee", "name dob relation phone permanentAddress")
+      .populate("route", "name")
+      .populate({
+        path: "chits",
+        populate: { path: "auction" },
+      })
+      .lean(); // Convert to plain JavaScript object for better performance
+
+    // Check if route.name is missing and handle it
+    users.forEach(user => {
+      if (user.route && !user.route.name) {
+        user.route.name = "Unknown"; // Fallback value
+      }
+    }); 
+
+    if (!users.length) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    res.status(200).json({ message: "Users fetched successfully", data: users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({
+      message: error.name === "CastError" ? "Invalid data provided" : "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+export const MonthlyChits = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const agent = await Agent.findById(agentId)
+      .populate({
+        path: "monthlyUsers",
+        populate: [
+          {
+            path: "chitId",
+            select: "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend"
+          },
+          {
+            path: "auction"
+          },
+          {
+            path: "userId",
+            select: "-password -expoPushToken"
           }
         ]
       })

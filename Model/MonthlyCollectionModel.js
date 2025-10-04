@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 const PaymentSchema = new mongoose.Schema({
   bookedChit: { type: mongoose.Schema.Types.ObjectId, ref: "bookedChit", required: true },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ["Paid", "Due"], required: true },
-  method: { type: String, enum: ["cash", "upi", "bank", "cheque","null"], default: "cash" },
+  status: { type: String, enum: ["paid", "due"], required: true },
   date: { type: Date, default: Date.now }
 }, { _id: false });
 
@@ -23,8 +22,8 @@ const MonthlyCollectionSchema = new mongoose.Schema({
 
 // Auto calculate totals per month
 MonthCollectionSchema.pre("save", function(next) {
-  this.totalAmount = this.payments.reduce((sum, payment) => payment.status === "Paid" ? sum + payment.amount : sum, 0);
-  this.dueAmount = this.payments.reduce((sum, payment) => payment.status === "Due" ? sum + payment.amount : sum, 0);
+  this.totalAmount = this.payments.reduce((sum, payment) => payment.status === "paid" ? sum + payment.amount : sum, 0);
+  this.dueAmount = this.payments.reduce((sum, payment) => payment.status === "due" ? sum + payment.amount : sum, 0);
   next();
 });
 

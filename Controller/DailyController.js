@@ -3,7 +3,7 @@ import DailyCollection from "../Model/DailyCollectionModel.js";
 export const CreateDailyCollection = async (req, res) => {
   try {
     const { bookedChit } = req.params;
-    const { agentId, routeId, amount, status, method } = req.body;
+    const { agentId, routeId, amount, status } = req.body;
 
     const today = new Date();
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
@@ -33,7 +33,7 @@ export const CreateDailyCollection = async (req, res) => {
     }
 
     // 4️⃣ Push payment into todayDay.payments
-    todayDay.payments.push({ bookedChit, amount, status, method });
+    todayDay.payments.push({ bookedChit, amount, status });
 
     // 5️⃣ Save the document
     await dailyCollection.save();
@@ -46,4 +46,22 @@ export const CreateDailyCollection = async (req, res) => {
 
 
 
+export const GetDailyCollection = async (req, res) => {
+  try {
+    const { routeId } = req.params;
+
+    const dailyCollection = await DailyCollection.findOne({ routeId }).populate({
+      path: "days.payments.bookedChit",   // nested populate
+      populate: { path: "userId" }        // populate inside bookedChit
+    });
+
+    if (!dailyCollection) {
+      return res.status(404).json({ message: "Daily collection not found" });
+    }
+
+    res.status(200).json(dailyCollection);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 

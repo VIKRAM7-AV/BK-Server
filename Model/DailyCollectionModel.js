@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 
 const PaymentSchema = new mongoose.Schema({
-  bookedChit: { type: mongoose.Schema.Types.ObjectId, ref: "bookedChit", required: true },
+  bookedChit: { type: mongoose.Schema.Types.ObjectId, ref: "BookedChit", required: true },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ["Paid", "Due"], required: true },
-  method: { type: String, enum: ["cash", "upi", "bank", "cheque","null"], default: "cash" },
+  status: { type: String, enum: ["Paid", "Due"], required: true }
 }, { _id: false });
 
 const DayCollectionSchema = new mongoose.Schema({
