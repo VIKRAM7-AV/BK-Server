@@ -1,11 +1,12 @@
 import express from "express";
-import { CreateTask, GetTasks,todayTask } from "../Controller/TaskController.js";
+import { CreateTask, GetTasks,todayTask,GetRoutes } from "../Controller/TaskController.js";
 
 const router = express.Router();
 
 router.post("/create", CreateTask);
-router.get("/agenttask", GetTasks);
+router.post("/agenttask/:id", GetTasks);
 router.post("/todaytask", todayTask);
+router.get("/routes/:routeId", GetRoutes);
 
 
 

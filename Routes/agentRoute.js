@@ -1,5 +1,5 @@
 import express from "express";
-import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin, Getme,DailyChits, getallUsers, MonthlyChits } from "../Controller/AgentController.js";
+import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin, Getme,DailyChits, getallUsers, MonthlyChits, getBookedChitDetails } from "../Controller/AgentController.js";
 import { authenticateAgent } from "../Middleware/UserMiddle.js";
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.post("/save-token", TokenPush);
 router.get('/dailychits/:agentId', DailyChits);
 router.get('/allusers', getallUsers);
 router.get('/monthlychits/:agentId', MonthlyChits);
+router.get("/chitdetails", getBookedChitDetails);
 
 
 

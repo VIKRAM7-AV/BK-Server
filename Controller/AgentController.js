@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
 import User from "../Model/UserModel.js";
+import {BookedChit} from "../Model/BookedChit.js";
 
 const expo = new Expo();
 
@@ -34,32 +35,31 @@ export const NewAgent = async (req, res) => {
 
 export const SetPin = async (req, res) => {
   try {
-    const { agentId, phone } = req.body;
-    const agent = await Agent.findOne({ agentId });
+    const { AgentId, phone, pin } = req.body; // Destructure pin early for validation
+    const agent = await Agent.findOne({ agentId: AgentId });
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
+    
     if (agent.phone !== phone) {
       return res.status(400).json({ message: "Phone number mismatch" });
     }
-
-    const { pin } = req.body;
     if (!pin || pin.length < 6) {
       return res.status(400).json({ message: "PIN must be at least 6 characters long" });
     }
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10); // Reduced to 10 for balance
     const hashedPin = await bcrypt.hash(pin, salt);
 
-    if(agent.password === "000000"){
-    agent.password = hashedPin;
-    await agent.save();
-    res.status(200).json({ message: "PIN set successfully" });
+    if (agent.password === "000000") {
+      agent.password = hashedPin; // Consider: agent.pinHash = hashedPin;
+      await agent.save();
+      return res.status(200).json({ message: "PIN set successfully" });
     } else {
-      res.status(400).json({ message: "Please Reset a your PIN" });
+      return res.status(400).json({ message: "Please reset your PIN" }); // Fixed typo
     }
   } catch (error) {
     console.error("Error setting PIN:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -102,37 +102,45 @@ export const ChangePin = async (req, res) => {
 
 export const ForgetPin = async (req, res) => {
   try {
-    const { agentId, phone, username } = req.body;
+    const { agentId, phone, username, pin } = req.body;
     const agent = await Agent.findOne({ agentId });
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
-    if (agent.phone !== phone) {
+    if (agent.phone.toString() !== phone.toString()) {
       return res.status(400).json({ message: "Phone number mismatch" });
     }
     if (agent.name !== username) {
       return res.status(400).json({ message: "Username mismatch" });
     }
 
-    const { pin } = req.body;
-    if (!pin || pin.length < 6) {
-      return res.status(400).json({ message: "PIN must be at least 6 characters long" });
+    if (!pin || pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      return res.status(400).json({ message: "PIN must be exactly 6 digits" });
     }
-    const salt = await bcrypt.genSalt(12);
-    const hashedPin = await bcrypt.hash(pin, salt);
 
-    if(agent.password !== "000000"){
+    const defaultPin = "000000";
+    let hashedPin;
+    if (agent.password === defaultPin) {
+      // First time set from default
+      const salt = await bcrypt.genSalt(12);
+      hashedPin = await bcrypt.hash(pin, salt);
+      agent.password = hashedPin;
+      await agent.save();
+      return res.status(200).json({ message: "PIN set successfully" });
+    } else {
+      // Reset existing PIN
+      const salt = await bcrypt.genSalt(12);
+      hashedPin = await bcrypt.hash(pin, salt);
       agent.password = hashedPin;
       await agent.save();
       res.status(200).json({ message: "PIN Reset successfully" });
-    } else {
-      res.status(400).json({ message: "Please set a new PIN" });
     }
   } catch (error) {
     console.error("Error setting PIN:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const LoginAgent = async (req, res) => {
   try {
@@ -361,5 +369,46 @@ export const MonthlyChits = async (req, res) => {
   } catch (error) {
     console.error("Error fetching daily chits:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getBookedChitDetails = async (req, res) => {
+  try {
+    console.log("🔍 Starting query for all booked chits...");
+
+    const bookingChits = await BookedChit.find({status: "active"})  // Now this will work!
+      .populate({
+        path: "userId",
+        select: "name phone email",
+      })
+      .populate({
+        path: "chitId",
+        select: "name durationmonths totalMembers amountPerMonth",
+      })
+      .populate({
+        path: "auction",
+        populate: {
+          path: "userId",
+          select: "name phone",
+        },
+      })
+      .lean();
+
+    
+
+    if (!bookingChits.length) {
+      return res.status(404).json({ message: "Chit Data is Not Found" });
+    }
+
+
+    res.status(200).json({
+      message: "Booked Chit details fetched successfully",
+      count: bookingChits.length,
+      data: bookingChits,
+    });
+  } catch (error) {
+    console.error("💥 Full error stack:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };

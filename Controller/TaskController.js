@@ -1,5 +1,6 @@
 import Task from '../Model/TaskModel.js';
 import Agent from '../Model/AgentModal.js';
+import WorkerRoute from '../Model/WorkerRoute.js';
 
 export const CreateTask = async (req, res) => {
   try {
@@ -21,8 +22,8 @@ export const CreateTask = async (req, res) => {
 
 export const GetTasks = async (req, res) => {
     try {
-        const {id} = req.body;
-        const tasks = await Task.find({ assignedTo: id });
+        const { id } = req.params;
+        const tasks = await Task.find({ assignedTo: id }).populate('Route');
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ message: error.message });        
@@ -45,4 +46,23 @@ export const todayTask = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+}
+
+
+export const GetRoutes = async (req, res) => {
+    try {
+        const { routeId } = req.params;
+        const routes = await WorkerRoute.find({ _id: routeId })
+            .populate({
+                path: 'DailyChit',
+                populate: [
+                    { path: 'userId' },
+                    { path: 'chitId' }
+                ]
+            });
+        res.status(200).json({ data: routes, success: true });
+    } catch (error) {
+        res.status(400).json({ error: error.message, success: false });
+        console.error("Error fetching routes:", error);
+    }
 }

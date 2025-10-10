@@ -77,7 +77,7 @@ const bookedChitSchema = new mongoose.Schema(
     dailyAmount: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["active", "completed", "closed"],
+      enum: ["active", "completed", "closed", "arrear"],
       default: "active",
     },
     PenaltyAmount: { type: Number, default: 0 },
