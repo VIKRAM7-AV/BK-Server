@@ -5,29 +5,48 @@ import * as firebaseServices from '../firebaseServices.js';
 import { Expo } from 'expo-server-sdk';
 import User from "../Model/UserModel.js";
 import {BookedChit} from "../Model/BookedChit.js";
+import { v2 as cloudinary } from 'cloudinary';
 
 const expo = new Expo();
 
 
 export const NewAgent = async (req, res) => {
   try {
-    const agent = new Agent(req.body);
-    if(!agent.name || !agent.phone || !agent.permanentAddress || !agent.dob){
+    const { name, phone, permanentAddress, dob, profile } = req.body;
+
+    if (!name || !phone || !permanentAddress || !dob) {
       return res.status(400).json({ error: "All fields are required" });
     }
-    if(!agent.phone.toString().match(/^[6-9]\d{9}$/)){
+
+    if (!phone.toString().match(/^[6-9]\d{9}$/)) {
       return res.status(400).json({ error: "Invalid phone number" });
     }
-    if(agent.phone){
-      const existingAgent = await Agent.findOne({ phone: agent.phone });
-      if (existingAgent) {
-        return res.status(400).json({ error: "Phone number already exists" });
-      }
-    }
-    
-    await agent.save();
-    res.status(200).json({ message: "Agent created successfully", agent });
 
+    const existingAgent = await Agent.findOne({ phone });
+    if (existingAgent) {
+      return res.status(400).json({ error: "Phone number already exists" });
+    }
+
+    let profileUrl = null;
+    if (profile) {
+      const image = await cloudinary.uploader.upload(profile, {
+        folder: "agent_profiles",
+        width: 500,
+        crop: "scale",
+      });
+      profileUrl = image.secure_url;
+    }
+
+    const newagent = new Agent({
+      name,
+      dob,
+      phone,
+      permanentAddress,
+      profile: profileUrl,
+    });
+
+    await newagent.save();
+    res.status(200).json({ message: "Agent created successfully", agent: newagent });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -66,7 +85,7 @@ export const SetPin = async (req, res) => {
 
 export const ChangePin = async (req, res) => {
   try {
-    const { pin , userId } = req.body;
+    const { pin, userId } = req.body;
 
     if (!pin) {
       return res.status(400).json({ message: "PIN is required." });
@@ -76,12 +95,13 @@ export const ChangePin = async (req, res) => {
       return res.status(400).json({ message: "PIN must be at least 6 digits." });
     }
 
-    const agent = await Agent.findById(userId);
+    console.log("userId:", userId);
+
+    const agent = await Agent.findOne({ _id: userId });
 
     if (!agent) {
       return res.status(404).json({ message: "Agent not found." });
     }
-
 
     const salt = await bcrypt.genSalt(12);
     const hashedPin = await bcrypt.hash(pin, salt);
@@ -412,3 +432,21 @@ export const getBookedChitDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
+
+export const getAllAgents = async (req, res) => {
+  try {
+    const agents = await Agent.find()
+      .select("-password -__v -createdAt -updatedAt -expoPushToken")
+      .lean();
+
+    if (!agents.length) {
+      return res.status(404).json({ message: "No agents found" });
+    }
+
+    res.status(200).json({ message: "Agents fetched successfully", data: agents });
+  } catch (error) {
+    console.error("💥 Full error stack:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+}

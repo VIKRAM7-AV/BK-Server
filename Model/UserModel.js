@@ -40,6 +40,7 @@ const UserSchema = new mongoose.Schema(
     },
     profile: {
       type: String,
+      required: true,
     },
     dob: {
       type: Date,

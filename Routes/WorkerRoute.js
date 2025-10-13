@@ -1,9 +1,10 @@
 import express from 'express';
-import { NewRoute } from '../Controller/WorkerRouteController.js';
+import { NewRoute, AllRoute } from '../Controller/WorkerRouteController.js';
 
 const router = express.Router();
 
 router.post('/newroute', NewRoute);
+router.get('/allroutes', AllRoute);
 
 
 

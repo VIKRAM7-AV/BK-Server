@@ -2,6 +2,8 @@ import User from "../Model/UserModel.js";
 import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt.js";
+import { v2 as cloudinary } from 'cloudinary';
+
 
 export const SetPin = async (req, res) => {
   try {
@@ -192,6 +194,7 @@ export const TokenPush = async (req, res) => {
 export const NewUser = async (req, res) => {
   try {
     const {
+      profile,
       name,
       dob,
       phone,
@@ -205,6 +208,7 @@ export const NewUser = async (req, res) => {
     } = req.body;
 
     if (
+      !profile ||
       !name ||
       !dob ||
       !phone ||
@@ -230,6 +234,7 @@ export const NewUser = async (req, res) => {
     }
 
     const newUser = new User({
+      profile,
       name,
       dob,
       phone,
@@ -242,6 +247,12 @@ export const NewUser = async (req, res) => {
       nominee,
     });
 
+    const image = await cloudinary.uploader.upload(profile, {
+      folder: "user_profiles",
+      width: 500,
+      crop: "scale",
+    });
+    newUser.profile = image.secure_url;
     const savedUser = await newUser.save();
     res.status(200).json({
       message: "User created successfully",
