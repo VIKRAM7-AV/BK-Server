@@ -223,19 +223,19 @@ export const RefreshTokenCon = async (req, res) => {
 
 export const TokenPush = async (req, res) => {
   try {
-    const { userId, token } = req.body;
-    if (!userId || !token) {
-      return res.status(400).json({ success: false, message: 'User ID and token required' });
+    const { agentId, token } = req.body;
+    if (!agentId || !token) {
+      return res.status(400).json({ success: false, message: 'Agent ID and token required' });
     }
 
     const agent = await Agent.updateOne(
-      { _id: userId },
+      { _id: agentId },
       { $set: { expoPushToken: token } }
     );
     if (agent.modifiedCount === 0) {
       return res.status(404).json({ success: false, message: 'Agent not found' });
     }
-    await firebaseServices.saveToken(userId, { expoPushToken: token });
+    await firebaseServices.saveToken(agentId, { expoPushToken: token });
     res.status(200).json({ success: true, message: 'Token saved' });
   } catch (error) {
     console.error('Error saving push token:', error);

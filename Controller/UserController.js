@@ -190,7 +190,6 @@ export const TokenPush = async (req, res) => {
   }
 };
 
-
 export const NewUser = async (req, res) => {
   try {
     const {
