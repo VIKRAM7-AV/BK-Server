@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Enquiry, ChitExit, ExitCompany, OpenChit} from '../Model/EnquiryModal.js';
 import Agent from "../Model/AgentModal.js"
 import {BookedChit} from "../Model/BookedChit.js";
@@ -7,34 +8,68 @@ import { Expo } from 'expo-server-sdk';
 import VacantChit from '../Model/VacantChitModel.js';
 
 
+const sendEnquiryNotification = async (agent, enquiryData) => {
+  const { name, chitPlan, duration } = enquiryData;
+  const title = 'New Enquiry Assigned';
+  const body = `New enquiry from ${name} for ₹${chitPlan} chit plan (${duration} months)`;
+  
+  // Expo push notification only
+  if (agent?.expoPushToken) {
+    const expo = new Expo();
+    const messages = [{
+      to: agent.expoPushToken,
+      sound: 'default',
+      title,
+      body,
+    }];
+    
+    // Manually chunk into groups of 100 (Expo limit)
+    const chunks = [];
+    for (let i = 0; i < messages.length; i += 100) {
+      chunks.push(messages.slice(i, i + 100));
+    }
+    
+    for (const chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error('Error sending push notification:', error);
+      }
+    }
+  }
+  
+  return {
+    title: 'New Enquiry Assigned',
+    description: `New enquiry from ${name} for ₹${chitPlan} chit plan (${duration} months)`
+  };
+};
+
 export const NewEnquiry = async (req, res) => {
   try {
     const { name, phone, chitPlan, duration, message } = req.body;
-
+    
     if (!name || !phone || !chitPlan || !duration) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
-
+    
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(phone)) {
       return res.status(400).json({ success: false, message: 'Invalid phone number format' });
     }
-
+    
     const phoneExists = await Enquiry.findOne({ phone });
     if (phoneExists) {
       return res.status(200).json({ success: false, message: 'Your Phone number already Exists' });
     }
-
-    // Step 1: Get all agents
+    
     const agents = await Agent.find({});
     if (agents.length === 0) {
       return res.status(500).json({ success: false, message: 'No agents available' });
     }
-
-    // Step 2: Calculate total chit value per agent
+    
     let lowestAgent = null;
     let lowestChitSum = Infinity;
-
+    
     for (let agent of agents) {
       const enquiries = await Enquiry.find({ agentId: agent._id });
       const chitSum = enquiries.reduce((sum, eq) => sum + eq.chitPlan, 0);
@@ -43,31 +78,33 @@ export const NewEnquiry = async (req, res) => {
         lowestAgent = agent;
       }
     }
-
-    // Step 3: Assign enquiry to agent with lowest total chit value
+    
+    const notificationData = await sendEnquiryNotification(lowestAgent, { name, chitPlan, duration });
+    
     const newEnquiry = new Enquiry({
       name,
       phone,
       chitPlan,
       duration,
       message,
+      title: notificationData.title,
+      description: notificationData.description,
       agentId: lowestAgent._id
     });
-
+    
     await newEnquiry.save();
-
+    
     res.status(200).json({ 
       success: true, 
       message: `Your enquiry has been submitted and assigned to ${lowestAgent.name}`, 
       data: newEnquiry 
     });
-
+    
   } catch (error) {
     console.error('Error creating enquiry:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
 
 
 const sendChitExitNotification = async (agent, bookedchit) => {
@@ -82,7 +119,7 @@ const sendChitExitNotification = async (agent, bookedchit) => {
     });
 
   if (!bookedChitDoc || !bookedChitDoc.userId || !bookedChitDoc.chitId) {
-    return;
+    return null;
   }
 
   const userName = bookedChitDoc.userId.name;
@@ -91,7 +128,7 @@ const sendChitExitNotification = async (agent, bookedchit) => {
   const title = 'Chit Exit Processed';
   const body = `A chit exit has been processed for ${userName}'s chit group ${chitGroupID}`;
 
-  // Expo push
+  // Expo push notification only
   if (agent?.expoPushToken) {
     const expo = new Expo();
     const messages = [{
@@ -116,17 +153,12 @@ const sendChitExitNotification = async (agent, bookedchit) => {
     }
   }
 
-  // In-app notification
-  if (!agent.notification) {
-    agent.notification = [];
-  }
-  agent.notification.push({
-    type: 'chitExit',
-    message: `A chit exit has been processed for ${userName}'s chit group ${chitGroupID}`,
-  });
-  await agent.save();
+  // Return title and description for ChitExit model
+  return {
+    title: 'Chit Exit Processed',
+    description: `A chit exit has been processed for ${userName}'s chit group ${chitGroupID}`
+  };
 };
-
 
 export const ChitExitFn = async (req, res) => {
   try {
@@ -178,16 +210,17 @@ export const ChitExitFn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Agent not found' });
     }
 
-    // Create and save exit
+    // Send notification and get title/description
+    const notificationData = await sendChitExitNotification(existAgent, bookedchit);
+
+    // Create and save exit with title and description
     const newChitExit = new ChitExit({
       agentId: existAgent._id,
       bookedchit,
+      title: notificationData?.title || 'Chit Exit Processed',
+      description: notificationData?.description || `Chit exit processed for booked chit ID: ${bookedchit}`
     });
     await newChitExit.save();
-
-    // Send notifications
-
-    await sendChitExitNotification(existAgent, bookedchit);
 
     const message = existBookedChit.bookingType === 'daily'
       ? 'Daily Chit exit processed successfully'
@@ -207,7 +240,7 @@ const sendCompanyExitNotification = async (agent, userId) => {
     .select('name');
 
   if (!user) {
-    return;
+    return null;
   }
 
   const userName = user.name;
@@ -215,7 +248,7 @@ const sendCompanyExitNotification = async (agent, userId) => {
   const title = 'Company Exit Processed';
   const body = `A company exit has been processed for ${userName}`;
 
-  // Expo push
+  // Expo push notification only
   if (agent?.expoPushToken) {
     const expo = new Expo();
     const messages = [{
@@ -240,15 +273,11 @@ const sendCompanyExitNotification = async (agent, userId) => {
     }
   }
 
-  // In-app notification
-  if (!agent.notification) {
-    agent.notification = [];
-  }
-  agent.notification.push({
-    type: 'companyExit',
-    message: `A company exit has been processed for ${userName}`,
-  });
-  await agent.save();
+  // Return title and description for ExitCompany model
+  return {
+    title: 'Company Exit Processed',
+    description: `A company exit has been processed for ${userName}`
+  };
 };
 
 export const CompanyExitFn = async (req, res) => {
@@ -280,15 +309,17 @@ export const CompanyExitFn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Company exit already processed for this user' });
     }
 
-    // Create and save exit
+    // Send notification and get title/description
+    const notificationData = await sendCompanyExitNotification(existAgent, userId);
+
+    // Create and save exit with title and description
     const newCompanyExit = new ExitCompany({
       agentId: existAgent._id,
       userId,
+      title: notificationData?.title || 'Company Exit Processed',
+      description: notificationData?.description || `A company exit has been processed for user ID: ${userId}`
     });
     await newCompanyExit.save();
-
-    // Send notifications
-    await sendCompanyExitNotification(existAgent, userId);
 
     res.status(200).json({ 
       success: true, 
@@ -303,20 +334,21 @@ export const CompanyExitFn = async (req, res) => {
 
 
 
+
 const sendVacantChitNotification = async (agent, userId, vacantChitId) => {
   const user = await User.findOne({ _id: userId })
     .select('name');
 
   if (!user) {
-    return;
+    return null;
   }
 
   const vacantChit = await VacantChit.findOne({ _id: vacantChitId })
-    .select('chitplan  pendingAmount collectedAmount')
+    .select('chitplan pendingAmount collectedAmount')
     .populate({ path: 'chitplan', model: 'ChitGroup' });
 
   if (!vacantChit) {
-    return;
+    return null;
   }
 
   const userName = user.name;
@@ -326,7 +358,7 @@ const sendVacantChitNotification = async (agent, userId, vacantChitId) => {
   const title = `New Vacant Chit Booking for ${userName}`;
   const body = `Your client ${userName} has newly sent a request for vacant chit. Group Code: ${groupCode}, Balance Due: ${pendingAmount}`;
 
-  // Expo push notification
+  // Expo push notification only
   if (agent?.expoPushToken) {
     const expo = new Expo();
     const messages = [{
@@ -351,15 +383,11 @@ const sendVacantChitNotification = async (agent, userId, vacantChitId) => {
     }
   }
 
-  // In-app notification
-  if (!agent.notification) {
-    agent.notification = [];
-  }
-  agent.notification.push({
-    type: 'vacantChitBooking',
-    message: `Your client ${userName} has newly sent a request for vacant chit. Group Code: ${groupCode}, Balance Due: ${pendingAmount}`,
-  });
-  await agent.save();
+  // Return title and description for OpenChit model
+  return {
+    title: `New Vacant Chit Booking for ${userName}`,
+    description: `Your client ${userName} has newly sent a request for vacant chit. Group Code: ${groupCode}, Balance Due: ${pendingAmount}`
+  };
 };
 
 export const VacantChitBookingFn = async (req, res) => {
@@ -414,16 +442,18 @@ export const VacantChitBookingFn = async (req, res) => {
       });
     }
 
-    // Create and save new booking
+    // Send notification and get title/description
+    const notificationData = await sendVacantChitNotification(existAgent, userId, openchit);
+
+    // Create and save new booking with title and description
     const newOpenChit = new OpenChit({
       agentId: existAgent._id,
       openchit: openchit,
-      userId
+      userId,
+      title: notificationData?.title || 'New Vacant Chit Booking',
+      description: notificationData?.description || `Vacant chit booking request for chit ID: ${openchit}`
     });
     await newOpenChit.save();
-
-    // Send notifications
-    await sendVacantChitNotification(existAgent, userId, openchit);
 
     res.status(200).json({ 
       success: true, 
@@ -439,3 +469,106 @@ export const VacantChitBookingFn = async (req, res) => {
   }
 };
 
+
+// Express route handler function
+export const getAgentNotifications = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    // Validate agentId (assuming it's a valid ObjectId)
+    if (!mongoose.Types.ObjectId.isValid(agentId)) {
+      return res.status(400).json({ error: 'Invalid agentId' });
+    }
+
+    // Fetch data from each model filtered by agentId
+    const enquiries = await Enquiry.find({ agentId }).sort({ createdAt: -1 });
+    const chitExits = await ChitExit.find({ agentId }).sort({ createdAt: -1 });
+    const exitCompanies = await ExitCompany.find({ agentId }).sort({ createdAt: -1 });
+    const openChits = await OpenChit.find({ agentId }).sort({ createdAt: -1 });
+
+    // Combine all notifications into a single mixed array with type
+    const notifications = [
+      ...enquiries.map(item => ({ ...item.toObject(), type: 'Enquiry' })),
+      ...chitExits.map(item => ({ ...item.toObject(), type: 'ChitExit' })),
+      ...exitCompanies.map(item => ({ ...item.toObject(), type: 'ExitCompany' })),
+      ...openChits.map(item => ({ ...item.toObject(), type: 'OpenChit' }))
+    ];
+
+    // Sort the combined notifications by createdAt descending (mixed order)
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.status(200).json({
+      success: true,
+      data: notifications, // Single mixed sorted list
+      counts: {
+        enquiries: enquiries.length,
+        chitExits: chitExits.length,
+        exitCompanies: exitCompanies.length,
+        openChits: openChits.length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching agent notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+export const markNotificationAsViewed = async (req, res) => {
+  try {
+    const { id, type } = req.body;
+
+    // Validate required fields
+    if (!id || !type) {
+      return res.status(400).json({ error: 'id and type are required' });
+    }
+
+    // Validate id format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid id format' });
+    }
+
+    let updatedNotification;
+    let Model;
+
+    // Select the appropriate model based on type
+    switch (type) {
+      case 'Enquiry':
+        Model = Enquiry;
+        break;
+      case 'ChitExit':
+        Model = ChitExit;
+        break;
+      case 'ExitCompany':
+        Model = ExitCompany;
+        break;
+      case 'OpenChit':
+        Model = OpenChit;
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid notification type' });
+    }
+
+    // Update the viewed status
+    updatedNotification = await Model.findByIdAndUpdate(
+      id,
+      { view: true },
+      { new: true } // Return the updated document
+    );
+
+    // Check if notification exists
+    if (!updatedNotification) {
+      return res.status(404).json({ error: `${type} notification not found` });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification marked as viewed',
+      data: updatedNotification
+    });
+  } catch (error) {
+    console.error('Error marking notification as viewed:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -7,6 +7,8 @@ const enquirySchema = new mongoose.Schema({
     duration:{ type: String, required: true },
     message: { type: String },
     agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
+    title: { type: String },
+    description: { type: String },
     view: { type: Boolean, default: false }
 }, { timestamps: true });
 
@@ -15,6 +17,8 @@ const Enquiry = mongoose.model("Enquiry", enquirySchema);
 const chitExitSchema = new mongoose.Schema({
     agentId:{type:mongoose.Schema.Types.ObjectId, ref:'Agent'},
     bookedchit:{type:mongoose.Schema.Types.ObjectId, ref:'BookedChit'},
+    title:{type:String},
+    description:{type:String},
     status:{type:String, enum:['pending','approved','rejected'], default:'pending'},
     view:{type:Boolean, default:false}
 },{ timestamps: true });
@@ -24,6 +28,8 @@ const ChitExit = mongoose.model("ChitExit", chitExitSchema);
 const exitCompanySchema = new mongoose.Schema({
     agentId:{type:mongoose.Schema.Types.ObjectId, ref:'Agent'},
     userId:{type:mongoose.Schema.Types.ObjectId, ref:'User'},
+    title:{type:String},
+    description:{type:String},
     status:{type:String, enum:['pending','approved','rejected'], default:'pending'},
     view:{type:Boolean, default:false}
 },{ timestamps: true });
@@ -34,6 +40,8 @@ const OpenChitSchema = new mongoose.Schema({
     agentId:{type:mongoose.Schema.Types.ObjectId, ref:'Agent'},
     openchit:{type:mongoose.Schema.Types.ObjectId, ref:'VacantChit'},
     userId:{type:mongoose.Schema.Types.ObjectId, ref:'User'},
+    title:{type:String},
+    description:{type:String},
     status:{type:String, enum:['pending','approved','rejected'], default:'pending'},
     view:{type:Boolean, default:false}
 },{ timestamps: true });

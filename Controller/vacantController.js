@@ -3,31 +3,30 @@ import VacantChit from "../Model/VacantChitModel.js";
 import { ChitExit } from "../Model/EnquiryModal.js";
 import Notification from "../Model/notification.js";
 import { Expo } from 'expo-server-sdk';
-import { model } from "mongoose";
 
 export const VacantAdd = async (req, res) => {
     try {
         const { chitExit } = req.params;
         const { creater } = req.body;
 
-        const chitRequest = await ChitExit.findOne({ bookedchit: chitExit });
+        const chitRequest = await ChitExit.findOne({ _id: chitExit });
         if (!chitRequest) {
             return res.status(404).json({ message: "Chit Exit request not found" });
         }
 
-        
+        const bookedchit = chitRequest.bookedchit;
 
-        const ExistingChit = await BookedChit.findOne({ _id: chitExit }).populate('userId');
+        const ExistingChit = await BookedChit.findOne({ _id: bookedchit }).populate('userId');
         if(!ExistingChit) {
             return res.status(404).json({ message: "Booked Chit not found" });
         }
 
         if(ExistingChit) {
-            await BookedChit.updateOne({ _id: chitExit }, { status: "closed" });
+            await BookedChit.updateOne({ _id: bookedchit }, { status: "closed" });
         }
 
         if(chitRequest) {
-            await ChitExit.updateOne({ bookedchit: chitExit }, { status: "approved"});
+            await ChitExit.updateOne({ bookedchit: bookedchit }, { status: "approved"});
         }
 
         const startDate = new Date(ExistingChit.createdAt);
