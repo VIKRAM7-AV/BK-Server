@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const PaymentSchema = new mongoose.Schema({
   bookedChit: { type: mongoose.Schema.Types.ObjectId, ref: "BookedChit", required: true },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ["Paid", "Due"], required: true }
+  status: { type: String, enum: ["paid", "due"], required: true }
 }, { _id: false });
 
 const DayCollectionSchema = new mongoose.Schema({
@@ -22,11 +22,11 @@ const DailyCollectionSchema = new mongoose.Schema({
 
 DayCollectionSchema.pre("save", function (next) {
   this.totalAmount = this.payments.reduce((sum, payment) => {
-    return payment.status === "Paid" ? sum + payment.amount : sum;
+    return payment.status === "paid" ? sum + payment.amount : sum;
   }, 0);
 
   this.dueAmount = this.payments.reduce((sum, payment) => {
-    return payment.status === "Due" ? sum + payment.amount : sum;
+    return payment.status === "due" ? sum + payment.amount : sum;
   }, 0);
 
   next();
