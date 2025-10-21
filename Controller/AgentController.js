@@ -1,14 +1,17 @@
-import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt.js";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
+} from "../utils/jwt.js";
 import Agent from "../Model/AgentModal.js";
 import bcrypt from "bcrypt";
-import * as firebaseServices from '../firebaseServices.js';
-import { Expo } from 'expo-server-sdk';
+import * as firebaseServices from "../firebaseServices.js";
+import { Expo } from "expo-server-sdk";
 import User from "../Model/UserModel.js";
-import {BookedChit} from "../Model/BookedChit.js";
-import { v2 as cloudinary } from 'cloudinary';
+import { BookedChit } from "../Model/BookedChit.js";
+import { v2 as cloudinary } from "cloudinary";
 
 const expo = new Expo();
-
 
 export const NewAgent = async (req, res) => {
   try {
@@ -46,7 +49,9 @@ export const NewAgent = async (req, res) => {
     });
 
     await newagent.save();
-    res.status(200).json({ message: "Agent created successfully", agent: newagent });
+    res
+      .status(200)
+      .json({ message: "Agent created successfully", agent: newagent });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -59,12 +64,14 @@ export const SetPin = async (req, res) => {
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
-    
+
     if (agent.phone !== phone) {
       return res.status(400).json({ message: "Phone number mismatch" });
     }
     if (!pin || pin.length < 6) {
-      return res.status(400).json({ message: "PIN must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "PIN must be at least 6 characters long" });
     }
     const salt = await bcrypt.genSalt(10); // Reduced to 10 for balance
     const hashedPin = await bcrypt.hash(pin, salt);
@@ -82,7 +89,6 @@ export const SetPin = async (req, res) => {
   }
 };
 
-
 export const ChangePin = async (req, res) => {
   try {
     const { pin, userId } = req.body;
@@ -92,7 +98,9 @@ export const ChangePin = async (req, res) => {
     }
 
     if (pin.length < 6) {
-      return res.status(400).json({ message: "PIN must be at least 6 digits." });
+      return res
+        .status(400)
+        .json({ message: "PIN must be at least 6 digits." });
     }
 
     console.log("userId:", userId);
@@ -111,14 +119,11 @@ export const ChangePin = async (req, res) => {
     await agent.save();
 
     res.status(200).json({ message: "New PIN set successfully." });
-
   } catch (error) {
     console.error("Error setting PIN:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
-
-
 
 export const ForgetPin = async (req, res) => {
   try {
@@ -161,7 +166,6 @@ export const ForgetPin = async (req, res) => {
   }
 };
 
-
 export const LoginAgent = async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -188,13 +192,18 @@ export const LoginAgent = async (req, res) => {
       accessTokenAgent,
       refreshTokenAgent,
     });
-    res.status(200).json({ message: "Login successful", accessTokenAgent, refreshTokenAgent });
+    res
+      .status(200)
+      .json({
+        message: "Login successful",
+        accessTokenAgent,
+        refreshTokenAgent,
+      });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export const RefreshTokenCon = async (req, res) => {
   try {
@@ -206,7 +215,9 @@ export const RefreshTokenCon = async (req, res) => {
     try {
       decoded = verifyToken(refreshTokenAgent);
     } catch (err) {
-      return res.status(401).json({ message: "Invalid or expired refresh token" });
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired refresh token" });
     }
     const agent = await Agent.findById(decoded.id);
     if (!agent) {
@@ -220,12 +231,13 @@ export const RefreshTokenCon = async (req, res) => {
   }
 };
 
-
 export const TokenPush = async (req, res) => {
   try {
     const { agentId, token } = req.body;
     if (!agentId || !token) {
-      return res.status(400).json({ success: false, message: 'Agent ID and token required' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Agent ID and token required" });
     }
 
     const agent = await Agent.updateOne(
@@ -233,16 +245,17 @@ export const TokenPush = async (req, res) => {
       { $set: { expoPushToken: token } }
     );
     if (agent.modifiedCount === 0) {
-      return res.status(404).json({ success: false, message: 'Agent not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Agent not found" });
     }
     await firebaseServices.saveToken(agentId, { expoPushToken: token });
-    res.status(200).json({ success: true, message: 'Token saved' });
+    res.status(200).json({ success: true, message: "Token saved" });
   } catch (error) {
-    console.error('Error saving push token:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error saving push token:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 
 export const Getme = async (req, res) => {
   try {
@@ -257,8 +270,7 @@ export const Getme = async (req, res) => {
     } catch (err) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
-    const agent = await Agent.findById(decoded.id)
-      .populate("monthlyUsers");
+    const agent = await Agent.findById(decoded.id).populate("monthlyUsers");
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
@@ -268,6 +280,7 @@ export const Getme = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 export const DailyChits = async (req, res) => {
@@ -280,22 +293,26 @@ export const DailyChits = async (req, res) => {
         populate: [
           {
             path: "DailyChit",
+            match: { status: "active" },
             populate: [
               { path: "chitId" },
               { path: "auction" },
-              { 
-                path: "userId", 
-                select: "-password -expoPushToken"  // only for users
-              }
-            ]
-          }
-        ]
+              {
+                path: "userId",
+                select: "-password -expoPushToken", // only for users
+              },
+            ],
+          },
+        ],
       })
       .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
 
-    if (!agent) {
-      return res.status(404).json({ message: "Agent not found" });
+    if (!agent || !agent.route) {
+      return res.status(404).json({ message: "Agent or route not found" });
     }
+
+    // Log the count for debugging (remove in production if not needed)
+    console.log(`Active DailyChit count: ${agent.route.DailyChit?.length || 0}`);
 
     res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
   } catch (error) {
@@ -320,13 +337,19 @@ export const getallUsers = async (req, res) => {
     }
 
     // Select fields dynamically or exclude sensitive ones
-    const selectFields = fields ? fields.split(",").join(" ") : "-password -expoPushToken";
+    const selectFields = fields
+      ? fields.split(",").join(" ")
+      : "-password -expoPushToken";
 
     const users = await query
       .select(selectFields)
       .populate({
         path: "chits",
-        populate: { path: "chitId", select: "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend" },
+        populate: {
+          path: "chitId",
+          select:
+            "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend",
+        },
       })
       .populate("agent", "name phone agentId")
       .populate("nominee", "name dob relation phone permanentAddress")
@@ -338,25 +361,32 @@ export const getallUsers = async (req, res) => {
       .lean(); // Convert to plain JavaScript object for better performance
 
     // Check if route.name is missing and handle it
-    users.forEach(user => {
+    users.forEach((user) => {
       if (user.route && !user.route.name) {
         user.route.name = "Unknown"; // Fallback value
       }
-    }); 
+    });
 
     if (!users.length) {
       return res.status(404).json({ message: "No users found" });
     }
 
-    res.status(200).json({ message: "Users fetched successfully", data: users });
+    res
+      .status(200)
+      .json({ message: "Users fetched successfully", data: users });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({
-      message: error.name === "CastError" ? "Invalid data provided" : "Internal server error",
+      message:
+        error.name === "CastError"
+          ? "Invalid data provided"
+          : "Internal server error",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
+
+
 
 export const MonthlyChits = async (req, res) => {
   try {
@@ -365,19 +395,21 @@ export const MonthlyChits = async (req, res) => {
     const agent = await Agent.findById(agentId)
       .populate({
         path: "monthlyUsers",
+        match: { status: "active" },
         populate: [
           {
             path: "chitId",
-            select: "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend"
+            select:
+              "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend auctionTable",
           },
           {
-            path: "auction"
+            path: "auction",
           },
           {
             path: "userId",
-            select: "-password -expoPushToken"
-          }
-        ]
+            select: "-password -expoPushToken",
+          },
+        ],
       })
       .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
 
@@ -385,19 +417,25 @@ export const MonthlyChits = async (req, res) => {
       return res.status(404).json({ message: "Agent not found" });
     }
 
-    res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
+    // Log the count for debugging (remove in production if not needed)
+    console.log(`Active MonthlyUsers count: ${agent.monthlyUsers?.length || 0}`);
+
+    res
+      .status(200)
+      .json({ message: "monthly chits fetched successfully", data: agent });
   } catch (error) {
-    console.error("Error fetching daily chits:", error);
+    console.error("Error fetching monthly chits:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 export const getBookedChitDetails = async (req, res) => {
   try {
     console.log("🔍 Starting query for all booked chits...");
 
-    const bookingChits = await BookedChit.find({status: "active"})  // Now this will work!
+    const bookingChits = await BookedChit.find({ status: "active" }) // Now this will work!
       .populate({
         path: "userId",
         select: "name phone email",
@@ -415,12 +453,9 @@ export const getBookedChitDetails = async (req, res) => {
       })
       .lean();
 
-    
-
     if (!bookingChits.length) {
       return res.status(404).json({ message: "Chit Data is Not Found" });
     }
-
 
     res.status(200).json({
       message: "Booked Chit details fetched successfully",
@@ -429,10 +464,11 @@ export const getBookedChitDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("💥 Full error stack:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
-
 
 export const getAllAgents = async (req, res) => {
   try {
@@ -444,9 +480,95 @@ export const getAllAgents = async (req, res) => {
       return res.status(404).json({ message: "No agents found" });
     }
 
-    res.status(200).json({ message: "Agents fetched successfully", data: agents });
+    res
+      .status(200)
+      .json({ message: "Agents fetched successfully", data: agents });
   } catch (error) {
     console.error("💥 Full error stack:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
+
+
+export const ArrearDailyChits = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const agent = await Agent.findById(agentId)
+      .populate({
+        path: "route",
+        populate: [
+          {
+            path: "DailyChit",
+            match: { status: "arrear" },
+            populate: [
+              { path: "chitId" },
+              { path: "auction" },
+              {
+                path: "userId",
+                select: "-password -expoPushToken", // only for users
+              },
+            ],
+          },
+        ],
+      })
+      .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
+
+    if (!agent || !agent.route) {
+      return res.status(404).json({ message: "Agent or route not found" });
+    }
+
+    // Log the count for debugging (remove in production if not needed)
+    console.log(`Active DailyChit count: ${agent.route.DailyChit?.length || 0}`);
+
+    res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
+  } catch (error) {
+    console.error("Error fetching daily chits:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+export const ArrearMonthlyChits = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const agent = await Agent.findById(agentId)
+      .populate({
+        path: "monthlyUsers",
+        match: { status: "arrear" },
+        populate: [
+          {
+            path: "chitId",
+            select:
+              "groupCode chitValue durationMonths monthlyContribution dailyContribution totalDueAmount totalDividend auctionTable",
+          },
+          {
+            path: "auction",
+          },
+          {
+            path: "userId",
+            select: "-password -expoPushToken",
+          },
+        ],
+      })
+      .select("-password -__v -createdAt -updatedAt -expoPushToken"); // for agent only
+
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    // Log the count for debugging (remove in production if not needed)
+    console.log(`Active MonthlyUsers count: ${agent.monthlyUsers?.length || 0}`);
+
+    res
+      .status(200)
+      .json({ message: "monthly chits fetched successfully", data: agent });
+  } catch (error) {
+    console.error("Error fetching monthly chits:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
