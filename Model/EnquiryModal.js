@@ -9,6 +9,7 @@ const enquirySchema = new mongoose.Schema({
     agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
     title: { type: String },
     description: { type: String },
+    status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     view: { type: Boolean, default: false }
 }, { timestamps: true });
 

@@ -3,6 +3,10 @@ import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
 import { signAccessToken, signRefreshToken, verifyToken } from "../utils/jwt.js";
 import { v2 as cloudinary } from 'cloudinary';
+import { Expo } from 'expo-server-sdk';
+import AgentNotification from '../Model/AgentNotification.js';
+import {ExitCompany} from '../Model/EnquiryModal.js';
+import Notification from "../Model/notification.js";
 
 
 export const SetPin = async (req, res) => {
@@ -307,4 +311,138 @@ export const me = async (req, res) => {
 
 
 
+export const approvedCompanyExit = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const existUser = await User.findOne({ _id: id, status: 'active' }).populate('agent');
+    if (!existUser) {
+      return res.status(404).json({ message: "User not found or already inactive" });
+    }
+
+    const exitRequest = await ExitCompany.findOne({ userId: id, status: 'pending' });
+    if (!exitRequest) {
+      return res.status(404).json({ message: "Pending exit request not found" });
+    }
+
+    existUser.status = 'inactive';
+    existUser.password = '0000';
+    await existUser.save();
+
+
+    if (existUser.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: existUser.expoPushToken,
+        sound: 'default',
+        title: 'Company Exit Approved',
+        body: `Your request to exit the company has been approved successfully.`,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+      for (let chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: existUser._id,
+                title: 'Company Exit Approved',
+                body: `Your request to exit the company has been approved successfully.`,
+                notificationId: ticket.id
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    const agentNotification = new AgentNotification({
+      agentId: existUser.agent._id,
+      title: 'User Company Exit Approved',
+      description: `User ${existUser.name} has successfully exited the company.`
+    });
+    await agentNotification.save();
+   
+    // Delete the exit request document
+    await ExitCompany.deleteOne({ _id: exitRequest._id });
+
+    res.status(200).json({ message: "Company exit approved successfully" });
+    
+  } catch (error) {
+    console.error("Error approving company exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
+  }
+}
+
+
+export const rejectCompanyExit = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existUser = await User.findOne({ _id: id, status: 'active' }).populate('agent');
+    if (!existUser) {
+      return res.status(404).json({ message: "User not found or already inactive" });
+    }
+
+    const exitRequest = await ExitCompany.findOne({ userId: id, status: 'pending' });
+    if (!exitRequest) {
+      return res.status(404).json({ message: "Pending exit request not found" });
+    }
+
+    if (existUser.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: existUser.expoPushToken,
+        sound: 'default',
+        title: 'Company Exit Rejected',
+        body: `Your request to exit the company has been rejected.`,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+      for (let chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: existUser._id,
+                title: 'Company Exit Rejected',
+                body: `Your request to exit the company has been rejected.`,
+                notificationId: ticket.id
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    const agentNotification = new AgentNotification({
+      agentId: existUser.agent._id,
+      title: 'User Company Exit Rejected',
+      description: `User ${existUser.name}'s exit request has been rejected.`
+    });
+    await agentNotification.save();
+
+    // Delete the exit request document
+    await ExitCompany.deleteOne({ _id: exitRequest._id });
+
+    res.status(200).json({ message: "Company exit rejected successfully" });
+    
+  } catch (error) {
+    console.error("Error rejecting company exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
+  }
+}

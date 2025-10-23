@@ -90,6 +90,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      default: 'active'
+    },
     expoPushToken: {
       type: String,
     },

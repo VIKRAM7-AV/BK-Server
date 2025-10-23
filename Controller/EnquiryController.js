@@ -6,6 +6,7 @@ import WorkerRoute from '../Model/WorkerRoute.js';
 import User from "../Model/UserModel.js";
 import { Expo } from 'expo-server-sdk'; 
 import VacantChit from '../Model/VacantChitModel.js';
+import AgentNotification from '../Model/AgentNotification.js';
 
 
 const sendEnquiryNotification = async (agent, enquiryData) => {
@@ -480,18 +481,47 @@ export const getAgentNotifications = async (req, res) => {
       return res.status(400).json({ error: 'Invalid agentId' });
     }
 
-    // Fetch data from each model filtered by agentId
-    const enquiries = await Enquiry.find({ agentId }).sort({ createdAt: -1 });
-    const chitExits = await ChitExit.find({ agentId }).sort({ createdAt: -1 });
-    const exitCompanies = await ExitCompany.find({ agentId }).sort({ createdAt: -1 });
-    const openChits = await OpenChit.find({ agentId }).sort({ createdAt: -1 });
+    // Fetch data from each model filtered by agentId (using .lean() for plain objects)
+    const enquiries = await Enquiry.find({ agentId, status: 'pending' }).sort({ createdAt: -1 }).lean();
+    const chitExits = await ChitExit.find({ agentId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'bookedchit',
+        populate: [
+          { path: 'userId', select: 'name profile phone' },
+          { path: 'chitId', select: 'groupCode' }
+        ]
+      })
+      .lean();
+    const exitCompanies = await ExitCompany.find({ agentId })
+      .sort({ createdAt: -1 })
+      .populate({ path: 'userId', select: '-password -expoPushToken' })
+      .lean();
+    const openChits = await OpenChit.find({ agentId })
+      .sort({ createdAt: -1 })
+      .populate({ path: 'userId', select: '-password -expoPushToken' })
+      .populate({
+        path: 'openchit',
+        populate: [
+          {
+            path: 'creater',
+            select: 'name profile'
+          },
+          {
+            path: 'chitplan',
+            model: 'ChitGroup',
+            select: 'groupCode'
+          }
+        ]
+      })
+      .lean();
 
     // Combine all notifications into a single mixed array with type
     const notifications = [
-      ...enquiries.map(item => ({ ...item.toObject(), type: 'Enquiry' })),
-      ...chitExits.map(item => ({ ...item.toObject(), type: 'ChitExit' })),
-      ...exitCompanies.map(item => ({ ...item.toObject(), type: 'ExitCompany' })),
-      ...openChits.map(item => ({ ...item.toObject(), type: 'OpenChit' }))
+      ...enquiries.map(item => ({ ...item, type: 'Enquiry' })),
+      ...chitExits.map(item => ({ ...item, type: 'ChitExit' })),
+      ...exitCompanies.map(item => ({ ...item, type: 'ExitCompany' })),
+      ...openChits.map(item => ({ ...item, type: 'OpenChit' }))
     ];
 
     // Sort the combined notifications by createdAt descending (mixed order)
@@ -570,5 +600,35 @@ export const markNotificationAsViewed = async (req, res) => {
   } catch (error) {
     console.error('Error marking notification as viewed:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+
+export const completeEnquiry = async (req, res) => {
+  try {
+    const { id } = req.params; 
+
+    const enquiry = await Enquiry.findOne({ _id: id, status: 'pending' });
+    if (!enquiry) {
+      return res.status(404).json({ message: "Enquiry not found or already completed" });
+    }
+
+    enquiry.status = 'completed';
+    await enquiry.save();
+
+    const agentNotification = new AgentNotification({
+      agentId: enquiry.agentId,
+      title: 'Enquiry Completed',
+      description: `Enquiry from ${enquiry.name} has been completed.`
+    });
+    await agentNotification.save();
+
+    res.status(200).json({ message: "Enquiry completed successfully" });
+    
+  } catch (error) {
+    console.error("Error completing enquiry:", error);
+    res.status(500).json({ message: "Internal server error" });    
   }
 };

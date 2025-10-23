@@ -1,5 +1,5 @@
 import express from "express";
-import { SetPin, LoginCon, NewUser, LogoutCon, me, RefreshTokenCon, ForgetPin, ChangePin, TokenPush } from "../Controller/UserController.js";
+import { SetPin, LoginCon, NewUser, LogoutCon, me, RefreshTokenCon, ForgetPin, ChangePin, TokenPush, approvedCompanyExit, rejectCompanyExit } from "../Controller/UserController.js";
 import {authenticateUser} from "../Middleware/UserMiddle.js";
 const router = express.Router();
 
@@ -13,6 +13,8 @@ router.post("/logout", LogoutCon);
 router.post("/newuser", NewUser);
 router.post('/token', TokenPush);
 router.get("/me", authenticateUser, me);
+router.post("/approved-company-exit/:id", approvedCompanyExit);
+router.post("/reject-company-exit/:id", rejectCompanyExit);
 
 
 export default router;

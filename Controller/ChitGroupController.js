@@ -5,7 +5,9 @@ import { Expo } from "expo-server-sdk";
 import Notification from "../Model/notification.js";
 import WorkerRoute from "../Model/WorkerRoute.js";
 import Agent from "../Model/AgentModal.js";
-import { getDayIndex, getMonthIndex } from "../utils/dateUtils.js";
+import { getMonthIndex } from "../utils/dateUtils.js";
+import { ChitExit } from "../Model/EnquiryModal.js";
+import AgentNotification from "../Model/AgentNotification.js";
 const expo = new Expo();
 
 export const ChitGroupController = async (req, res) => {
@@ -655,3 +657,164 @@ export const ArrearPayment = async (req, res) => {
 };
 
 
+
+export const rejectChitExit = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const exitNotification = await ChitExit.findOne({ _id: id });
+    if (!exitNotification) {
+      return res.status(404).json({ message: "Pending chit exit request not found" });
+    }
+
+    // Get the booked chit and populate userId to get user details and agent
+    const bookedChit = await BookedChit.findOne({ _id: exitNotification.bookedchit })
+      .populate({
+        path: 'userId',
+        populate: { path: 'agent' }
+      });
+
+    if (!bookedChit || !bookedChit.userId) {
+      return res.status(404).json({ message: "Booked chit or user not found" });
+    }
+
+    const user = bookedChit.userId;
+
+    // Send push notification to user if they have expo push token
+    if (user.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: user.expoPushToken,
+        sound: 'default',
+        title: 'Chit Exit Rejected',
+        body: `Your request to exit the chit has been rejected.`,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+      
+      for (let chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                title: 'Chit Exit Rejected',
+                body: `Your request to exit the chit has been rejected.`,
+                notificationId: ticket.id
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    // Save agent notification
+    const agentNotification = new AgentNotification({
+      agentId: user.agent._id,
+      title: 'User Chit Exit Rejected',
+      description: `User ${user.name}'s chit exit request has been rejected.`
+    });
+    await agentNotification.save();
+
+    // Delete the chit exit notification
+    await ChitExit.deleteOne({ _id: exitNotification._id });
+
+    res.status(200).json({ message: "Chit exit rejected successfully" });
+    
+  } catch (error) {
+    console.error("Error rejecting chit exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
+  }
+};
+
+
+export const approveChitExit = async (req, res) => {
+  try {
+    const { id } = req.params; // notification id
+    
+    // Find the pending chit exit notification
+    const exitNotification = await ChitExit.findOne({ _id: id });
+    if (!exitNotification) {
+      return res.status(404).json({ message: "Pending chit exit request not found" });
+    }
+
+    // Get the booked chit and populate userId to get user details and agent
+    const bookedChit = await BookedChit.findById(exitNotification.bookedchit)
+      .populate({
+        path: 'userId',
+        populate: { path: 'agent' }
+      });
+
+    if (!bookedChit || !bookedChit.userId) {
+      return res.status(404).json({ message: "Booked chit or user not found" });
+    }
+
+    const user = bookedChit.userId;
+
+    // Update the booked chit status to 'closed'
+    await BookedChit.findByIdAndUpdate(
+      exitNotification.bookedchit,
+      { status: 'closed' },
+      { new: true }
+    );
+
+    // Send push notification to user if they have expo push token
+    if (user.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: user.expoPushToken,
+        sound: 'default',
+        title: 'Chit Exit Approved',
+        body: `Your request to exit the chit has been approved.`,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+      
+      for (let chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                title: 'Chit Exit Approved',
+                body: `Your request to exit the chit has been approved.`,
+                notificationId: ticket.id
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    // Save agent notification
+    const agentNotification = new AgentNotification({
+      agentId: user.agent._id,
+      title: 'User Chit Exit Approved',
+      description: `User ${user.name}'s chit exit request has been approved.`
+    });
+    await agentNotification.save();
+
+  // Delete the chit exit notification
+    await ChitExit.deleteOne({ _id: exitNotification._id });
+
+    res.status(200).json({ message: "Chit exit approved successfully" });
+    
+  } catch (error) {
+    console.error("Error approving chit exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
+  }
+};
