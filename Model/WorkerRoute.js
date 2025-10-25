@@ -17,10 +17,6 @@ const workerRouteSchema = new mongoose.Schema({
         ref: "BookedChit",
         default: []
     },
-    Agent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Agent"
-    },
     routeId: {
         type: String,
         unique: true,

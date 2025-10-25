@@ -1,3 +1,5 @@
+
+import fs from 'fs';
 import User from "../Model/UserModel.js";
 import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
@@ -194,78 +196,195 @@ export const TokenPush = async (req, res) => {
   }
 };
 
+// export const NewUser = async (req, res) => {
+//   try {
+//     const {
+//       profile,
+//       name,
+//       dob,
+//       phone,
+//       occupation,
+//       monthlyIncome,
+//       permanentAddress,
+//       agent,
+//       occupationAddress,
+//       route,
+//       nominee,
+//     } = req.body;
+
+//     if (
+//       !profile ||
+//       !name ||
+//       !dob ||
+//       !phone ||
+//       !occupation ||
+//       !monthlyIncome ||
+//       !permanentAddress ||
+//       !occupationAddress ||
+//       !route ||
+//       !agent ||
+//       !nominee ||
+//       !nominee.name ||
+//       !nominee.dob ||
+//       !nominee.relation ||
+//       !nominee.permanentAddress ||
+//       !nominee.phone
+//     ) {
+//       return res.status(400).json({ error: "All fields are required" });
+//     }
+
+//     const existingUser = await User.findOne({ phone });
+//     if (existingUser) {
+//       return res.status(400).json({ error: "Phone number already exists" });
+//     }
+
+//     const newUser = new User({
+//       profile,
+//       name,
+//       dob,
+//       phone,
+//       occupation,
+//       monthlyIncome,
+//       permanentAddress,
+//       occupationAddress,
+//       agent,
+//       route,
+//       nominee,
+//     });
+
+//     const image = await cloudinary.uploader.upload(profile, {
+//       folder: "user_profiles",
+//       width: 500,
+//       crop: "scale",
+//     });
+//     newUser.profile = image.secure_url;
+//     const savedUser = await newUser.save();
+//     res.status(200).json({
+//       message: "User created successfully",
+//       userId: savedUser.userId,
+//     });
+//   } catch (error) {
+//     console.error("Error creating user:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+
+
 export const NewUser = async (req, res) => {
   try {
+    const normalized = {};
+    for (const [rawKey, value] of Object.entries(req.body || {})) {
+      if (rawKey.includes('[') && rawKey.includes(']')) {
+        const parts = rawKey.replace(/\]/g, '').split('[');
+        for (let i = 0; i < parts.length; i++) {
+          const p = parts[i];
+          if (i === parts.length - 1) {
+            cur[p] = value;
+          } else {
+            cur[p] = cur[p] || {};
+            cur = cur[p];
+          }
+        }
+      } else {
+        normalized[rawKey] = value;
+      }
+    }
+    const body = normalized;
+
+    // Accept profile from req.file (multer) or req.body.profile (URL)
+    const uploadedProfile = req.file ?? (req.files && req.files.profile) ?? body.profile;
+
+    // Destructure fields
     const {
-      profile,
       name,
       dob,
-      phone,
+      phone: phoneStr,
       occupation,
-      monthlyIncome,
+      monthlyIncome: monthlyIncomeStr,
       permanentAddress,
       agent,
       occupationAddress,
       route,
-      nominee,
-    } = req.body;
+      nominee: rawNominee = {},
+    } = body;
 
-    if (
-      !profile ||
-      !name ||
-      !dob ||
-      !phone ||
-      !occupation ||
-      !monthlyIncome ||
-      !permanentAddress ||
-      !occupationAddress ||
-      !route ||
-      !agent ||
-      !nominee ||
-      !nominee.name ||
-      !nominee.dob ||
-      !nominee.relation ||
-      !nominee.permanentAddress ||
-      !nominee.phone
-    ) {
-      return res.status(400).json({ error: "All fields are required" });
+    // Convert types to match model (numbers)
+    const monthlyIncome = monthlyIncomeStr !== undefined ? parseFloat(monthlyIncomeStr) : NaN;
+    const phone = phoneStr !== undefined ? Number(String(phoneStr).trim()) : NaN;
+    const nomineePhone = rawNominee.phone !== undefined ? Number(String(rawNominee.phone).trim()) : NaN;
+
+    const nominee = {
+      name: rawNominee.name?.trim(),
+      dob: rawNominee.dob,
+      phone: nomineePhone,
+      relation: rawNominee.relation?.trim(),
+      permanentAddress: rawNominee.permanentAddress?.trim(),
+    };
+
+    // Validation
+    const missing = [];
+    if (!uploadedProfile) missing.push('profile');
+    if (!name || !name.trim()) missing.push('name');
+    if (!dob) missing.push('dob');
+    if (!phone || Number.isNaN(phone)) missing.push('phone');
+    if (!occupation || !occupation.trim()) missing.push('occupation');
+    if (Number.isNaN(monthlyIncome)) missing.push('monthlyIncome');
+    if (!permanentAddress || !permanentAddress.trim()) missing.push('permanentAddress');
+    if (!occupationAddress || !occupationAddress.trim()) missing.push('occupationAddress');
+    if (!route) missing.push('route');
+    if (!agent) missing.push('agent');
+    if (!nominee.name) missing.push('nominee.name');
+    if (!nominee.dob) missing.push('nominee.dob');
+    if (!nominee.relation) missing.push('nominee.relation');
+    if (!nominee.permanentAddress) missing.push('nominee.permanentAddress');
+    if (!nominee.phone || Number.isNaN(nominee.phone)) missing.push('nominee.phone');
+
+    if (missing.length > 0) {
+      return res.status(400).json({ error: 'Missing or invalid fields', missing });
     }
 
+    // Normalize profile value: if it's a file object from multer, use .path or .filename else assume URL string
+    let profileValue = null;
+    if (typeof uploadedProfile === 'string') {
+      profileValue = uploadedProfile;
+    } else if (uploadedProfile && typeof uploadedProfile === 'object') {
+      profileValue = uploadedProfile.path ?? uploadedProfile.filename ?? (Array.isArray(uploadedProfile) && uploadedProfile[0] && (uploadedProfile[0].path || uploadedProfile[0].filename)) ?? null;
+    }
+
+    // Check existing phone (phone stored as Number in your model)
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
-      return res.status(400).json({ error: "Phone number already exists" });
+      return res.status(400).json({ error: 'Phone number already exists' });
     }
 
+    // Create user document matching your model
     const newUser = new User({
-      profile,
-      name,
+      profile: profileValue,
+      name: name.trim(),
       dob,
       phone,
-      occupation,
+      occupation: occupation.trim(),
       monthlyIncome,
-      permanentAddress,
-      occupationAddress,
+      permanentAddress: permanentAddress.trim(),
       agent,
       route,
+      occupationAddress: occupationAddress.trim(),
       nominee,
     });
 
-    const image = await cloudinary.uploader.upload(profile, {
-      folder: "user_profiles",
-      width: 500,
-      crop: "scale",
-    });
-    newUser.profile = image.secure_url;
     const savedUser = await newUser.save();
-    res.status(200).json({
-      message: "User created successfully",
-      userId: savedUser.userId,
+    return res.status(200).json({
+      message: 'User created successfully',
+      userId: savedUser.userId ?? savedUser._id,
     });
   } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error creating user:', error);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
+
+
 
 export const LogoutCon = async (req, res) => {
   res.status(200).json({ message: "Logout successful. Please delete tokens on client." });

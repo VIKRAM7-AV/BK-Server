@@ -12,4 +12,17 @@ const auctionDataSchema = new mongoose.Schema({
 
 const AuctionData = mongoose.model('AuctionData', auctionDataSchema);
 
-export default AuctionData;
+const userAuctionDataSchema = new mongoose.Schema({
+    agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    auctionId: {type:mongoose.Schema.Types.ObjectId, ref:'Auction'},
+    reason: { type: String },
+    date: { type: Date, required: true },
+    amount: { type: Number, required: true },
+    status: { type: String, enum: ['pending', 'complete'], default: 'pending' },
+    view: { type: Boolean, default: false }
+}, { timestamps: true });
+
+const UserAuctionData = mongoose.model('UserAuctionData', userAuctionDataSchema);
+
+export { AuctionData, UserAuctionData };
