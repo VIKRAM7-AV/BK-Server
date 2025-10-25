@@ -103,8 +103,6 @@ export const ChangePin = async (req, res) => {
         .json({ message: "PIN must be at least 6 digits." });
     }
 
-    console.log("userId:", userId);
-
     const agent = await Agent.findOne({ _id: userId });
 
     if (!agent) {
@@ -276,7 +274,6 @@ export const Getme = async (req, res) => {
     }
     res.status(200).json({ agent });
   } catch (error) {
-    console.log("Error fetching agent data:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -311,8 +308,6 @@ export const DailyChits = async (req, res) => {
       return res.status(404).json({ message: "Agent or route not found" });
     }
 
-    // Log the count for debugging (remove in production if not needed)
-    console.log(`Active DailyChit count: ${agent.route.DailyChit?.length || 0}`);
 
     res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
   } catch (error) {
@@ -417,8 +412,6 @@ export const MonthlyChits = async (req, res) => {
       return res.status(404).json({ message: "Agent not found" });
     }
 
-    // Log the count for debugging (remove in production if not needed)
-    console.log(`Active MonthlyUsers count: ${agent.monthlyUsers?.length || 0}`);
 
     res
       .status(200)
@@ -433,7 +426,6 @@ export const MonthlyChits = async (req, res) => {
 
 export const getBookedChitDetails = async (req, res) => {
   try {
-    console.log("🔍 Starting query for all booked chits...");
 
     const bookingChits = await BookedChit.find({ status: "active" }) // Now this will work!
       .populate({
@@ -520,8 +512,6 @@ export const ArrearDailyChits = async (req, res) => {
       return res.status(404).json({ message: "Agent or route not found" });
     }
 
-    // Log the count for debugging (remove in production if not needed)
-    console.log(`Active DailyChit count: ${agent.route.DailyChit?.length || 0}`);
 
     res.status(200).json({ message: "Daily chits fetched successfully", data: agent });
   } catch (error) {
@@ -560,9 +550,6 @@ export const ArrearMonthlyChits = async (req, res) => {
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
-
-    // Log the count for debugging (remove in production if not needed)
-    console.log(`Active MonthlyUsers count: ${agent.monthlyUsers?.length || 0}`);
 
     res
       .status(200)

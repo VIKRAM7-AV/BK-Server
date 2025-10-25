@@ -19,11 +19,9 @@ function formatAmount(value) {
 const processMonthlyReminders = async () => {
   try {
     const today = new Date();
-    const day = today.getUTCDate(); // 1 to 31
-    console.log(`⏱ Today is ${day}`);
+    const day = today.getUTCDate();
 
     if (day < 10 || day > 15) {
-      console.log(`⏱ Today is ${day}, outside 10-15 range. Skipping job.`);
       return;
     }
 
@@ -44,7 +42,6 @@ const processMonthlyReminders = async () => {
     let notificationsSaved = 0;
 
     for (const user of users) {
-      console.log(`👤 Processing user: ${user.name}`);
       for (const chit of user.chits) {
         const bookingType = chit.bookingType || chit.chitId?.bookingType;
         const chitStatus = chit.status || chit.chitId?.status;
@@ -55,9 +52,6 @@ const processMonthlyReminders = async () => {
           );
 
           if (!auctionEntry) {
-            console.log(
-              `⏩ Skipping chit ${chit._id} for user ${user.name}. No auction entry for month ${chit?.payments.length + 1}`
-            );
             continue;
           }
 
@@ -76,9 +70,6 @@ const processMonthlyReminders = async () => {
           });
 
           if (paymentForThisMonth) {
-            console.log(
-              `✅ User ${user.name} already paid for month ${currentMonth}. No reminder.`
-            );
             continue;
           }
 
@@ -137,14 +128,10 @@ const processMonthlyReminders = async () => {
               }
             }
           } else {
-            console.log(
-              `⚠️ No push token for ${user.name}, reminder saved but not sent.`
-            );
+            continue;
           }
         } else {
-          console.log(
-            `⏩ Skipping chit ${chit._id} for user ${user.name}. Not monthly or not active`
-          );
+          continue;
         }
       }
     }

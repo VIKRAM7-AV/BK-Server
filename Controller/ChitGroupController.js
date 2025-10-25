@@ -506,7 +506,6 @@ export const dailypayment = async (req, res) => {
       const hasPenalty = bookedChit.payments.some(
         (p) => p.monthIndex === monthIndex
       );
-      console.log("hasPenalty", hasPenalty);
 
       if (!hasPenalty) {
         // 🔒 prevent monthIndex - 2 < 0
@@ -524,7 +523,7 @@ export const dailypayment = async (req, res) => {
 
           bookedChit = await BookedChit.findById(id).populate("userId");
         } else {
-          console.log("⚠️ First month: no penalty applied");
+          return res.status(400).json({ message: "No penalty applied" });
         }
       }
     }

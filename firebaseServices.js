@@ -30,7 +30,6 @@ export const saveToken = async (userId, token) => {
     }
     const userTokenRef = ref(database, `userTokens/${userId}`);
     await set(userTokenRef, { token });
-    console.log(`✅ Push token saved for user: ${userId}`);
     return true;
   } catch (error) {
     console.error('❌ Error saving token:', error);
@@ -47,7 +46,6 @@ export const getToken = async (userId) => {
     const snapshot = await get(ref(database, `userTokens/${userId}`));
     const tokenData = snapshot.val();
     if (!tokenData) {
-      console.log(`⚠️ No token found for user: ${userId}`);
       return null;
     }
     return tokenData; 
@@ -63,7 +61,6 @@ export const testFirebaseConnection = async () => {
     const testRef = ref(database, 'test');
     await set(testRef, { test: 'connection' });
     const snapshot = await get(testRef);
-    console.log('✅ Firebase connection test:', snapshot.val());
   } catch (error) {
     console.error('❌ Firebase connection test failed:', error);
   }
