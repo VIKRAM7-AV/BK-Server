@@ -19,7 +19,9 @@ const userAuctionDataSchema = new mongoose.Schema({
     reason: { type: String },
     date: { type: Date, required: true },
     amount: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'complete'], default: 'pending' },
+    title: { type: String },
+    description: { type: String },
+    status: { type: String, enum: ['pending', 'rejected', 'approved'], default: 'pending' },
     view: { type: Boolean, default: false }
 }, { timestamps: true });
 

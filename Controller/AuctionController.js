@@ -5,6 +5,7 @@ import Agent from "../Model/AgentModal.js";
 import { Expo } from 'expo-server-sdk';
 import Notification from "../Model/notification.js";
 import ChitGroup from "../Model/ChitGroup.js";
+import AgentNotification from "../Model/AgentNotification.js";
 
 export const setauction = async (req, res) => {
     try {
@@ -110,6 +111,8 @@ export const ModifyUserAuctionDate = async (req, res) => {
             agentId,
             userId,
             auctionId,
+            title: `Auction Participation for Month ${month}`,
+            description: `User ${bookedChit.userId.name} has participated in auction for month ${month}.`,
             reason,
             date,
             amount
@@ -159,5 +162,146 @@ export const ModifyUserAuctionDate = async (req, res) => {
     } catch (error) {
         console.error("Error in ModifyUserAuctionDate:", error);
         res.status(500).json({ message: "Error creating user auction data", error: error.message });
+    }
+};
+
+
+export const rejectAuction = async (req, res) => {
+    try {
+        const { auctionId } = req.params;
+
+        if (!auctionId) {
+            return res.status(400).json({ message: "Auction ID is required" });
+        }
+
+        const auction = await UserAuctionData.findOne({ _id: auctionId })
+            .populate({
+                path: 'userId',
+                populate: { path: 'agent' }
+            });
+
+        if (!auction) {
+            return res.status(404).json({ message: "Auction not found" });
+        }
+
+        if (!auction.userId) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = auction.userId;
+
+        // Update auction status
+        auction.status = "rejected";
+        await auction.save();
+
+        // Send push notification to user if they have expo push token
+        if (user.expoPushToken) {
+            const expo = new Expo();
+            const messages = [{
+                to: user.expoPushToken,
+                sound: 'default',
+                title: 'Auction Request Rejected',
+                body: `Your auction request has been rejected.`,
+            }];
+
+            const chunks = expo.chunkPushNotifications(messages);
+            const tickets = [];
+            
+            for (let chunk of chunks) {
+                try {
+                    const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+                    tickets.push(...ticketChunk);
+                    for (const ticket of ticketChunk) {
+                        if (ticket.id) {
+                            await Notification.create({
+                                userId: user._id,
+                                title: 'Auction Request Rejected',
+                                body: `Your auction request has been rejected.`,
+                                notificationId: ticket.id
+                            });
+                        } else if (ticket.status === "error") {
+                            console.error(`Push notification failed: ${ticket.message}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error sending push notification:', error);
+                }
+            }
+        }
+
+        // Save agent notification if user has an agent
+        if (user.agent) {
+            const agentNotification = new AgentNotification({
+                agentId: user.agent._id,
+                title: 'User Auction Request Rejected',
+                description: `User ${user.name}'s auction request has been rejected.`
+            });
+            await agentNotification.save();
+        }
+
+        await UserAuctionData.deleteOne({ _id: auctionId });
+        res.status(200).json({ message: "Auction rejected successfully", auction });
+    } catch (error) {
+        console.error("Error rejecting auction:", error);
+        res.status(500).json({ message: "Error rejecting auction", error });        
+    }
+};
+
+
+export const approveAuction = async (req, res) => {
+    try {
+        const { auctionId } = req.params;
+
+        if (!auctionId) {
+            return res.status(400).json({ message: "Auction ID is required" });
+        }
+
+        const userAuction = await UserAuctionData.findById(auctionId)
+            .populate({
+                path: 'userId',
+                populate: { path: 'agent' }
+            });
+
+        if (!userAuction) {
+            return res.status(404).json({ message: "Auction not found" });
+        }
+
+        if (!userAuction.userId) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = userAuction.userId;
+
+        // Update user auction status to approved
+        userAuction.status = "approved";
+        await userAuction.save();
+
+        // Create new AuctionData entry
+        const newAuctionData = new AuctionData({
+            auctionId: userAuction.auctionId,
+            agentId: userAuction.agentId,
+            userId: userAuction.userId._id,
+            date: userAuction.date,
+            amount: userAuction.amount,
+            reason: userAuction.reason
+        });
+        await newAuctionData.save();
+
+        // Save agent notification if user has an agent
+        if (user.agent) {
+            const agentNotification = new AgentNotification({
+                agentId: user.agent._id,
+                title: 'User Auction Request Approved',
+                description: `User ${user.name}'s auction request has been approved.`
+            });
+            await agentNotification.save();
+        }
+
+        res.status(200).json({ 
+            message: "Auction approved successfully"
+        });
+    } catch (error) {
+        console.error("Error approving auction:", error);
+        res.status(500).json({ message: "Error approving auction", error });        
     }
 };

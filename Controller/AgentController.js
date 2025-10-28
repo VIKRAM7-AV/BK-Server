@@ -430,7 +430,11 @@ export const getBookedChitDetails = async (req, res) => {
     const bookingChits = await BookedChit.find({ status: "active" }) // Now this will work!
       .populate({
         path: "userId",
-        select: "name phone email",
+        populate: {
+          path: "agent",
+          select: "name",
+        },
+        select: "name phone email profile ",
       })
       .populate({
         path: "chitId",

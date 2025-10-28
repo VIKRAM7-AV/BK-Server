@@ -7,6 +7,7 @@ import User from "../Model/UserModel.js";
 import { Expo } from 'expo-server-sdk'; 
 import VacantChit from '../Model/VacantChitModel.js';
 import AgentNotification from '../Model/AgentNotification.js';
+import { UserAuctionData } from '../Model/auctionModel.js';
 
 
 const sendEnquiryNotification = async (agent, enquiryData) => {
@@ -516,12 +517,26 @@ export const getAgentNotifications = async (req, res) => {
       })
       .lean();
 
-    // Combine all notifications into a single mixed array with type
+      const UserAuction = await UserAuctionData.find({ agentId })
+      .sort({ createdAt: -1 })
+      .populate({ path: 'userId', select: '-password -expoPushToken' })
+      .populate({
+        path: 'auctionId',
+        select: 'createdAt',
+        populate: {
+          path: 'chitId',
+          select: 'groupCode',
+        },        
+      })
+      .lean();
+          
+      // Combine all notifications into a single mixed array with type
     const notifications = [
       ...enquiries.map(item => ({ ...item, type: 'Enquiry' })),
       ...chitExits.map(item => ({ ...item, type: 'ChitExit' })),
       ...exitCompanies.map(item => ({ ...item, type: 'ExitCompany' })),
-      ...openChits.map(item => ({ ...item, type: 'OpenChit' }))
+      ...openChits.map(item => ({ ...item, type: 'OpenChit' })),
+      ...UserAuction.map(item => ({ ...item, type: 'UserAuctionData' }))
     ];
 
     // Sort the combined notifications by createdAt descending (mixed order)
@@ -534,7 +549,8 @@ export const getAgentNotifications = async (req, res) => {
         enquiries: enquiries.length,
         chitExits: chitExits.length,
         exitCompanies: exitCompanies.length,
-        openChits: openChits.length
+        openChits: openChits.length,
+        UserAuction: UserAuction.length
       }
     });
   } catch (error) {
@@ -575,6 +591,9 @@ export const markNotificationAsViewed = async (req, res) => {
         break;
       case 'OpenChit':
         Model = OpenChit;
+        break;
+      case 'UserAuctionData':
+        Model = UserAuctionData;
         break;
       default:
         return res.status(400).json({ error: 'Invalid notification type' });
