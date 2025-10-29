@@ -774,6 +774,13 @@ export const approveChitExit = async (req, res) => {
       { new: true }
     );
 
+    // Update the booked chit status to 'closed'
+    await Auction.findByIdAndUpdate(
+      bookedChit.auction,
+      { status: 'cancel' },
+      { new: true }
+    );
+
     // Send push notification to user if they have expo push token
     if (user.expoPushToken) {
       const expo = new Expo();
