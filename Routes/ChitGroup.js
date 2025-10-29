@@ -1,9 +1,10 @@
 import express from "express";
-import {ChitGroupController,AllChitGroup,UserChits,BookingChit,monthlypayment,dailypayment, ArrearPayment, rejectChitExit, approveChitExit} from "../Controller/ChitGroupController.js";
+import {ChitGroupController,AllChitGroup,UserChits,BookingChit,monthlypayment,dailypayment, ArrearPayment, AllChitPlans, rejectChitExit, approveChitExit} from "../Controller/ChitGroupController.js";
 
 const router= express.Router();
 
 router.post("/create", ChitGroupController);
+router.get('/chitplans', AllChitPlans);
 router.get("/", AllChitGroup);
 router.get("/:id", UserChits);
 router.post("/chits/:id", BookingChit);

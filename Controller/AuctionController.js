@@ -105,14 +105,21 @@ export const ModifyUserAuctionDate = async (req, res) => {
             agentId = userRoute._id;
         }
 
-        const date = existingAuction.auctionDate || new Date(); // Use auction date if available, else current
+        // Calculate date based on existingAuction.createdAt and the provided month
+        // Assuming month 1 corresponds to the createdAt month, and we add (month - 1) months
+        const startDate = new Date(existingAuction.createdAt);
+        startDate.setMonth(startDate.getMonth() + parseInt(month) - 1);
+        const date = startDate;
+
+        const title = `Auction Participation for Month ${month}`;
+        const description = `User ${bookedChit.userId.name} has participated in auction for month ${month}.`;
 
         const userAuctionData = new UserAuctionData({
             agentId,
             userId,
             auctionId,
-            title: `Auction Participation for Month ${month}`,
-            description: `User ${bookedChit.userId.name} has participated in auction for month ${month}.`,
+            title,
+            description,
             reason,
             date,
             amount
@@ -142,7 +149,7 @@ export const ModifyUserAuctionDate = async (req, res) => {
                             await Notification.create({
                                 userId: userId,
                                 title: 'New Auction Participation',
-                                body: `User ${bookedChit.GroupUserId} has participated in auction for month ${month}.`,
+                                body: `User ${bookedChit.userId.name} has participated in auction for month ${month}.`,
                                 notificationId: ticket.id
                             });
                         } else if (ticket.status === "error") {
@@ -164,6 +171,8 @@ export const ModifyUserAuctionDate = async (req, res) => {
         res.status(500).json({ message: "Error creating user auction data", error: error.message });
     }
 };
+
+
 
 
 export const rejectAuction = async (req, res) => {

@@ -29,6 +29,16 @@ export const AllChitGroup = async (req, res) => {
   }
 };
 
+
+export const AllChitPlans = async (req, res) => {
+  try {
+    const chitPlans = await ChitGroup.find().select('groupCode chitValue durationMonths monthlyContribution dailyContribution');
+    res.status(200).json(chitPlans);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching chit plans", error });    
+  }
+}
+
 export const UserChits = async (req, res) => {
   try {
     const userId = req.params.id;

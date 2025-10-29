@@ -5,7 +5,7 @@ const chitGroupSchema = new mongoose.Schema({
   chitValue: { type: Number, required: true },              
   durationMonths: { type: Number, required: true },          
   monthlyContribution: { type: Number, required: true },
-  dailyContribution: { type: Number },
+  dailyContribution: { type: Number, required: true },
 
   totalDueAmount: { type: Number, required: true },
   totalDividend: { type: Number, required: true },
