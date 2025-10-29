@@ -1,5 +1,3 @@
-
-import fs from 'fs';
 import User from "../Model/UserModel.js";
 import bcrypt from "bcrypt";
 import * as firebaseServices from '../firebaseServices.js';
@@ -194,80 +192,6 @@ export const TokenPush = async (req, res) => {
   }
 };
 
-// export const NewUser = async (req, res) => {
-//   try {
-//     const {
-//       profile,
-//       name,
-//       dob,
-//       phone,
-//       occupation,
-//       monthlyIncome,
-//       permanentAddress,
-//       agent,
-//       occupationAddress,
-//       route,
-//       nominee,
-//     } = req.body;
-
-//     if (
-//       !profile ||
-//       !name ||
-//       !dob ||
-//       !phone ||
-//       !occupation ||
-//       !monthlyIncome ||
-//       !permanentAddress ||
-//       !occupationAddress ||
-//       !route ||
-//       !agent ||
-//       !nominee ||
-//       !nominee.name ||
-//       !nominee.dob ||
-//       !nominee.relation ||
-//       !nominee.permanentAddress ||
-//       !nominee.phone
-//     ) {
-//       return res.status(400).json({ error: "All fields are required" });
-//     }
-
-//     const existingUser = await User.findOne({ phone });
-//     if (existingUser) {
-//       return res.status(400).json({ error: "Phone number already exists" });
-//     }
-
-//     const newUser = new User({
-//       profile,
-//       name,
-//       dob,
-//       phone,
-//       occupation,
-//       monthlyIncome,
-//       permanentAddress,
-//       occupationAddress,
-//       agent,
-//       route,
-//       nominee,
-//     });
-
-//     const image = await cloudinary.uploader.upload(profile, {
-//       folder: "user_profiles",
-//       width: 500,
-//       crop: "scale",
-//     });
-//     newUser.profile = image.secure_url;
-//     const savedUser = await newUser.save();
-//     res.status(200).json({
-//       message: "User created successfully",
-//       userId: savedUser.userId,
-//     });
-//   } catch (error) {
-//     console.error("Error creating user:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-
 
 export const NewUser = async (req, res) => {
   try {
@@ -275,8 +199,9 @@ export const NewUser = async (req, res) => {
     for (const [rawKey, value] of Object.entries(req.body || {})) {
       if (rawKey.includes('[') && rawKey.includes(']')) {
         const parts = rawKey.replace(/\]/g, '').split('[');
+        let cur = normalized; // Fix: Define cur here for each nested key
         for (let i = 0; i < parts.length; i++) {
-          const p = parts[i];
+          const p = parts[i].trim(); // Trim parts for safety
           if (i === parts.length - 1) {
             cur[p] = value;
           } else {
@@ -289,11 +214,7 @@ export const NewUser = async (req, res) => {
       }
     }
     const body = normalized;
-
-    // Accept profile from req.file (multer) or req.body.profile (URL)
     const uploadedProfile = req.file ?? (req.files && req.files.profile) ?? body.profile;
-
-    // Destructure fields
     const {
       name,
       dob,
@@ -306,12 +227,10 @@ export const NewUser = async (req, res) => {
       route,
       nominee: rawNominee = {},
     } = body;
-
     // Convert types to match model (numbers)
     const monthlyIncome = monthlyIncomeStr !== undefined ? parseFloat(monthlyIncomeStr) : NaN;
     const phone = phoneStr !== undefined ? Number(String(phoneStr).trim()) : NaN;
     const nomineePhone = rawNominee.phone !== undefined ? Number(String(rawNominee.phone).trim()) : NaN;
-
     const nominee = {
       name: rawNominee.name?.trim(),
       dob: rawNominee.dob,
@@ -319,7 +238,6 @@ export const NewUser = async (req, res) => {
       relation: rawNominee.relation?.trim(),
       permanentAddress: rawNominee.permanentAddress?.trim(),
     };
-
     // Validation
     const missing = [];
     if (!uploadedProfile) missing.push('profile');
@@ -337,25 +255,52 @@ export const NewUser = async (req, res) => {
     if (!nominee.relation) missing.push('nominee.relation');
     if (!nominee.permanentAddress) missing.push('nominee.permanentAddress');
     if (!nominee.phone || Number.isNaN(nominee.phone)) missing.push('nominee.phone');
-
     if (missing.length > 0) {
       return res.status(400).json({ error: 'Missing or invalid fields', missing });
     }
-
-    // Normalize profile value: if it's a file object from multer, use .path or .filename else assume URL string
-    let profileValue = null;
+    // Normalize profile value: if it's a URL string, use as is; else assume file object with buffer and upload to Cloudinary
+    let profileValue;
     if (typeof uploadedProfile === 'string') {
+      // Assume it's a pre-existing URL
       profileValue = uploadedProfile;
-    } else if (uploadedProfile && typeof uploadedProfile === 'object') {
-      profileValue = uploadedProfile.path ?? uploadedProfile.filename ?? (Array.isArray(uploadedProfile) && uploadedProfile[0] && (uploadedProfile[0].path || uploadedProfile[0].filename)) ?? null;
+    } else if (uploadedProfile && uploadedProfile.buffer) {
+      // Upload to Cloudinary from buffer (memoryStorage)
+      try {
+        const uploadResult = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'users/profiles',
+              resource_type: 'image',
+              transformation: [{ width: 500, height: 500, crop: 'limit', quality: 'auto' }],
+            },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary upload error:', error);
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            }
+          );
+          uploadStream.end(uploadedProfile.buffer);
+        });
+        profileValue = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error('Failed to upload to Cloudinary:', uploadError);
+        return res.status(500).json({ 
+          error: 'Failed to upload profile image to cloud storage',
+          details: uploadError.message 
+        });
+      }
+    } else {
+      // Fallback: should not reach here due to validation, but set to null
+      profileValue = null;
     }
-
     // Check existing phone (phone stored as Number in your model)
     const existingUser = await User.findOne({ phone });
     if (existingUser) {
       return res.status(400).json({ error: 'Phone number already exists' });
     }
-
     // Create user document matching your model
     const newUser = new User({
       profile: profileValue,
@@ -370,7 +315,6 @@ export const NewUser = async (req, res) => {
       occupationAddress: occupationAddress.trim(),
       nominee,
     });
-
     const savedUser = await newUser.save();
     return res.status(200).json({
       message: 'User created successfully',
@@ -381,7 +325,6 @@ export const NewUser = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
-
 
 
 export const LogoutCon = async (req, res) => {
