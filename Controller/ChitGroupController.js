@@ -403,200 +403,200 @@ export const approveChitExit = async (req, res) => {
 };
 
 
-export const dailypayment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { amount, status } = req.body;
+// export const dailypayment = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { amount, status } = req.body;
 
-    if (!amount || typeof amount !== "number" || amount <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Amount must be a positive number" });
-    }
-    if (!["paid", "due"].includes(status)) {
-      return res
-        .status(400)
-        .json({ message: 'Status must be either "paid" or "due"' });
-    }
+//     if (!amount || typeof amount !== "number" || amount <= 0) {
+//       return res
+//         .status(400)
+//         .json({ message: "Amount must be a positive number" });
+//     }
+//     if (!["paid", "due"].includes(status)) {
+//       return res
+//         .status(400)
+//         .json({ message: 'Status must be either "paid" or "due"' });
+//     }
 
-    let bookedChit = await BookedChit.findById(id).populate("userId");
-    if (!bookedChit)
-      return res.status(404).json({ message: "Booked Chit not found" });
-    if (bookedChit.bookingType !== "daily") {
-      return res
-        .status(400)
-        .json({ message: "This is not a daily booked chit" });
-    }
+//     let bookedChit = await BookedChit.findById(id).populate("userId");
+//     if (!bookedChit)
+//       return res.status(404).json({ message: "Booked Chit not found" });
+//     if (bookedChit.bookingType !== "daily") {
+//       return res
+//         .status(400)
+//         .json({ message: "This is not a daily booked chit" });
+//     }
 
-    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
-    if (!chitGroup)
-      return res.status(404).json({ message: "Chit Group not found" });
+//     const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+//     if (!chitGroup)
+//       return res.status(404).json({ message: "Chit Group not found" });
 
-    // ✅ Get monthIndex (10th → 9th cycle)
-    const monthIndex = getMonthIndex(bookedChit.month);
-    if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
-      return res
-        .status(400)
-        .json({ message: "Current month is invalid for this chit" });
-    }
+//     // ✅ Get monthIndex (10th → 9th cycle)
+//     const monthIndex = getMonthIndex(bookedChit.month);
+//     if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
+//       return res
+//         .status(400)
+//         .json({ message: "Current month is invalid for this chit" });
+//     }
 
-    // Get auctionTable entry for current month
-    const tableEntry = chitGroup.auctionTable[monthIndex - 1];
-    if (!tableEntry) {
-      return res
-        .status(400)
-        .json({ message: "No auctionTable entry for this month" });
-    }
+//     // Get auctionTable entry for current month
+//     const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+//     if (!tableEntry) {
+//       return res
+//         .status(400)
+//         .json({ message: "No auctionTable entry for this month" });
+//     }
 
-    // 🚫 CHECK: Only one entry per day allowed
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
+//     // 🚫 CHECK: Only one entry per day allowed
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0); // Start of today
     
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999); // End of today
+//     const todayEnd = new Date(today);
+//     todayEnd.setHours(23, 59, 59, 999); // End of today
 
-    const hasEntryToday = bookedChit.payments.some((p) => {
-      const paymentDate = new Date(p.date);
-      return paymentDate >= today && paymentDate <= todayEnd;
-    });
+//     const hasEntryToday = bookedChit.payments.some((p) => {
+//       const paymentDate = new Date(p.date);
+//       return paymentDate >= today && paymentDate <= todayEnd;
+//     });
 
-    if (hasEntryToday) {
-      return res.status(400).json({ 
-        message: "Payment entry already exists for today. Only one entry per day is allowed." 
-      });
-    }
+//     if (hasEntryToday) {
+//       return res.status(400).json({ 
+//         message: "Payment entry already exists for today. Only one entry per day is allowed." 
+//       });
+//     }
 
-    // ✅ Total paid in this month
-    const monthPayments = bookedChit.payments
-      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
-      .reduce((sum, p) => sum + p.amount, 0);
+//     // ✅ Total paid in this month
+//     const monthPayments = bookedChit.payments
+//       .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
+//       .reduce((sum, p) => sum + p.amount, 0);
 
-    // Validate 'paid'
-    if (status === "paid") {
-      if (
-        monthPayments + amount > tableEntry.dueAmount &&
-        bookedChit.pendingAmount === 0
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Payment exceeds remaining due for this month" });
-      } else if (
-        bookedChit.pendingAmount >= 0 &&
-        amount > bookedChit.pendingAmount + bookedChit.dailyAmount
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Payment exceeds your pending amount" });
-      }
-    }
+//     // Validate 'paid'
+//     if (status === "paid") {
+//       if (
+//         monthPayments + amount > tableEntry.dueAmount &&
+//         bookedChit.pendingAmount === 0
+//       ) {
+//         return res
+//           .status(400)
+//           .json({ message: "Payment exceeds remaining due for this month" });
+//       } else if (
+//         bookedChit.pendingAmount >= 0 &&
+//         amount > bookedChit.pendingAmount + bookedChit.dailyAmount
+//       ) {
+//         return res
+//           .status(400)
+//           .json({ message: "Payment exceeds your pending amount" });
+//       }
+//     }
 
-    // For daily: Apply late penalty if past 9th and not paid
-    let requiredAmount = tableEntry.dueAmount;
+//     // For daily: Apply late penalty if past 9th and not paid
+//     let requiredAmount = tableEntry.dueAmount;
 
-    if (
-      bookedChit.bookingType === "daily" &&
-      new Date().getDate() > 9 &&
-      monthPayments === 0 &&
-      monthPayments < tableEntry.dueAmount
-    ) {
-      requiredAmount = chitGroup.monthlyContribution;
+//     if (
+//       bookedChit.bookingType === "daily" &&
+//       new Date().getDate() > 9 &&
+//       monthPayments === 0 &&
+//       monthPayments < tableEntry.dueAmount
+//     ) {
+//       requiredAmount = chitGroup.monthlyContribution;
 
-      const hasPenalty = bookedChit.payments.some(
-        (p) => p.monthIndex === monthIndex
-      );
+//       const hasPenalty = bookedChit.payments.some(
+//         (p) => p.monthIndex === monthIndex
+//       );
 
-      if (!hasPenalty) {
-        // 🔒 prevent monthIndex - 2 < 0
-        if (monthIndex > 1) {
-          const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
-          if (!penaltyEntry) {
-            return res
-              .status(400)
-              .json({ message: "No auctionTable entry for this month" });
-          }
+//       if (!hasPenalty) {
+//         // 🔒 prevent monthIndex - 2 < 0
+//         if (monthIndex > 1) {
+//           const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+//           if (!penaltyEntry) {
+//             return res
+//               .status(400)
+//               .json({ message: "No auctionTable entry for this month" });
+//           }
 
-          await BookedChit.findByIdAndUpdate(bookedChit._id, {
-            $inc: { PenaltyAmount: penaltyEntry.dividend },
-          });
+//           await BookedChit.findByIdAndUpdate(bookedChit._id, {
+//             $inc: { PenaltyAmount: penaltyEntry.dividend },
+//           });
 
-          bookedChit = await BookedChit.findById(id).populate("userId");
-        } else {
-          return res.status(400).json({ message: "No penalty applied" });
-        }
-      }
-    }
+//           bookedChit = await BookedChit.findById(id).populate("userId");
+//         } else {
+//           return res.status(400).json({ message: "No penalty applied" });
+//         }
+//       }
+//     }
 
-    // ✅ Atomic update with monthIndex
-    const updateData = {
-      $push: { payments: { amount, status, monthIndex, date: new Date() } },
-    };
+//     // ✅ Atomic update with monthIndex
+//     const updateData = {
+//       $push: { payments: { amount, status, monthIndex, date: new Date() } },
+//     };
 
-    if (status === "paid") {
-      if (bookedChit.dailyAmount == amount) {
-        updateData.$inc = { collectedAmount: amount };
-      } else if (bookedChit.dailyAmount < amount) {
-        updateData.$inc = { collectedAmount: amount };
-        updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
-      } else if (bookedChit.dailyAmount > amount) {
-        updateData.$inc = { collectedAmount: amount };
-        updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
-      }
-    } else if (status === "due") {
-      updateData.$inc = { pendingAmount: bookedChit.dailyAmount };
-    }
+//     if (status === "paid") {
+//       if (bookedChit.dailyAmount == amount) {
+//         updateData.$inc = { collectedAmount: amount };
+//       } else if (bookedChit.dailyAmount < amount) {
+//         updateData.$inc = { collectedAmount: amount };
+//         updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
+//       } else if (bookedChit.dailyAmount > amount) {
+//         updateData.$inc = { collectedAmount: amount };
+//         updateData.$inc.pendingAmount = bookedChit.dailyAmount - amount;
+//       }
+//     } else if (status === "due") {
+//       updateData.$inc = { pendingAmount: bookedChit.dailyAmount };
+//     }
 
-    const entryPayment = await BookedChit.findByIdAndUpdate(
-      bookedChit._id,
-      updateData,
-      { new: true }
-    );
+//     const entryPayment = await BookedChit.findByIdAndUpdate(
+//       bookedChit._id,
+//       updateData,
+//       { new: true }
+//     );
 
-    // 🔔 Push notification
-    const user = bookedChit.userId;
-    if (user?.expoPushToken) {
-      const title = status === "paid" ? "Payment Successful" : "Payment Due";
-      const body =
-        status === "paid"
-          ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
-          : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
+//     // 🔔 Push notification
+//     const user = bookedChit.userId;
+//     if (user?.expoPushToken) {
+//       const title = status === "paid" ? "Payment Successful" : "Payment Due";
+//       const body =
+//         status === "paid"
+//           ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
+//           : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
 
-      const messages = [
-        { to: user.expoPushToken, sound: "default", title, body },
-      ];
-      const chunks = expo.chunkPushNotifications(messages);
+//       const messages = [
+//         { to: user.expoPushToken, sound: "default", title, body },
+//       ];
+//       const chunks = expo.chunkPushNotifications(messages);
 
-      for (const chunk of chunks) {
-        try {
-          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-          for (const ticket of ticketChunk) {
-            if (ticket.id) {
-              await Notification.create({
-                userId: user._id,
-                chitId: bookedChit._id,
-                month: monthIndex,
-                title,
-                body,
-                year: new Date().getFullYear(),
-                notificationId: ticket.id,
-                status,
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error sending push notification:", error);
-        }
-      }
-    }
+//       for (const chunk of chunks) {
+//         try {
+//           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+//           for (const ticket of ticketChunk) {
+//             if (ticket.id) {
+//               await Notification.create({
+//                 userId: user._id,
+//                 chitId: bookedChit._id,
+//                 month: monthIndex,
+//                 title,
+//                 body,
+//                 year: new Date().getFullYear(),
+//                 notificationId: ticket.id,
+//                 status,
+//               });
+//             }
+//           }
+//         } catch (error) {
+//           console.error("Error sending push notification:", error);
+//         }
+//       }
+//     }
 
-    res.status(200).json({
-      message: "Payment Entry Completed Successfully",
-      data: { entryPayment },
-    });
-  } catch (error) {
-    console.error("Error in payment function:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     res.status(200).json({
+//       message: "Payment Entry Completed Successfully",
+//       data: { entryPayment },
+//     });
+//   } catch (error) {
+//     console.error("Error in payment function:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 
 export const monthlypayment = async (req, res) => {
@@ -763,6 +763,229 @@ export const monthlypayment = async (req, res) => {
       }
     } else if (status === "due") {
       pendingInc += tableEntry.dueAmount;
+    }
+
+    update.$inc.pendingAmount = pendingInc;
+
+    const entryPayment = await BookedChit.findByIdAndUpdate(bookedChit._id, update, { new: true });
+
+    // Send push notification
+    const user = bookedChit.userId;
+    if (user?.expoPushToken) {
+      const title = status === "paid" ? "Payment Successful" : "Payment Due";
+      const body =
+        status === "paid"
+          ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
+          : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
+
+      const messages = [
+        { to: user.expoPushToken, sound: "default", title, body },
+      ];
+      const chunks = expo.chunkPushNotifications(messages);
+
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                chitId: bookedChit._id,
+                month: monthIndex,
+                title,
+                body,
+                year: new Date().getFullYear(),
+                notificationId: ticket.id,
+                status,
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error("Error sending push notification:", error);
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: "Payment Entry Completed Successfully",
+      data: { entryPayment },
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+export const dailypayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, status } = req.body;
+
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      return res.status(400).json({ message: "Amount must be a positive number" });
+    }
+    if (!["paid", "due"].includes(status)) {
+      return res.status(400).json({ message: 'Status must be either "paid" or "due"' });
+    }
+
+    let bookedChit = await BookedChit.findById(id).populate("userId");
+    if (!bookedChit) return res.status(404).json({ message: "Booked Chit not found" });
+
+    if (bookedChit.bookingType !== "daily") {
+      return res.status(400).json({ message: "This is not a daily booked chit" });
+    }
+
+    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+    if (!chitGroup) return res.status(404).json({ message: "Chit Group not found" });
+
+    // Get monthIndex (10th → 9th cycle)
+    const monthIndex = getMonthIndex(bookedChit.month);
+    if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
+      return res.status(400).json({ message: "Current month is invalid for this chit" });
+    }
+
+    const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+    if (!tableEntry) {
+      return res.status(400).json({ message: "No auctionTable entry for this month" });
+    }
+
+    // --- CHECK: Only one entry per day allowed ---
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(today);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const hasEntryToday = bookedChit.payments.some((p) => {
+      const paymentDate = new Date(p.date);
+      return paymentDate >= today && paymentDate <= todayEnd;
+    });
+
+    if (hasEntryToday) {
+      return res.status(400).json({ 
+        message: "Payment entry already exists for today. Only one entry per day is allowed." 
+      });
+    }
+
+    // --- Identify Chit Type ---
+    const isFirstPayment = bookedChit.payments.length === 0;
+    const isRegularChit = isFirstPayment && bookedChit.pendingAmount === 0;
+    const isVacantChit = isFirstPayment && bookedChit.pendingAmount > 0;
+
+    // Total paid this month
+    const monthPayments = bookedChit.payments
+      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
+      .reduce((sum, p) => sum + p.amount, 0);
+
+    const hasCurrentEntry = bookedChit.payments.some((p) => p.monthIndex === monthIndex);
+    const remainDue = tableEntry.dueAmount - monthPayments;
+
+    // --- Payment Validations ---
+    if (status === "paid") {
+      // If this month already has entry, can only pay up to pendingAmount
+      if (hasCurrentEntry) {
+        const remainPending = bookedChit.pendingAmount + bookedChit.dailyAmount;
+        if (amount > remainPending) {
+          return res.status(400).json({ 
+            message: `Payment cannot exceed remaining pending amount ₹${remainPending}` 
+          });
+        }
+      } else {
+        // First payment for this month
+        // Maximum allowed = dueAmount + pendingAmount
+        const maxAllowed = tableEntry.dueAmount + bookedChit.pendingAmount;
+        
+        if (amount > maxAllowed) {
+          return res.status(400).json({ 
+            message: `Payment cannot exceed ₹${maxAllowed} (Due: ₹${tableEntry.dueAmount} + Pending: ₹${bookedChit.pendingAmount})` 
+          });
+        }
+
+        // For regular chit first payment, must pay exact dailyAmount
+        if (isRegularChit && amount !== bookedChit.dailyAmount) {
+          return res.status(400).json({ 
+            message: `Must pay exact ₹${bookedChit.dailyAmount} as first payment` 
+          });
+        }
+      }
+    }
+
+    if (status === "due") {
+      if (hasCurrentEntry) {
+        return res.status(400).json({ message: "Due already marked for this month" });
+      }
+
+      if (amount !== bookedChit.dailyAmount) {
+        return res.status(400).json({ message: `Due must be exact ₹${bookedChit.dailyAmount}` });
+      }
+    }
+
+    // --- Late Penalty (after 9th) ---
+    if (new Date().getDate() > 9 && !hasCurrentEntry) {
+      if (isRegularChit || (!isRegularChit && bookedChit.payments.length > 0)) {
+        if (monthIndex > 1) {
+          const penaltyEntry = chitGroup.auctionTable[monthIndex - 2];
+          if (penaltyEntry) {
+            await BookedChit.findByIdAndUpdate(bookedChit._id, {
+              $inc: { PenaltyAmount: penaltyEntry.dividend },
+            });
+            bookedChit = await BookedChit.findById(id).populate("userId");
+          }
+        }
+      }
+    }
+
+    // --- Missed dues auto add (Only Regular and only on first entry for the month) ---
+    const missedPayments = [];
+    let missedDueTotal = 0;
+
+    if (!hasCurrentEntry && !isVacantChit) {
+      for (let m = 1; m < monthIndex; m++) {
+        const monthPaymentsM = bookedChit.payments
+          .filter((p) => p.monthIndex === m && p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+        const prevTable = chitGroup.auctionTable[m - 1];
+        const unpaidM = prevTable.dueAmount - monthPaymentsM;
+        
+        if (unpaidM === prevTable.dueAmount) {
+          missedPayments.push({
+            amount: bookedChit.dailyAmount,
+            status: "due",
+            monthIndex: m,
+            date: new Date(),
+          });
+          missedDueTotal += bookedChit.dailyAmount;
+        }
+      }
+    }
+
+    const currentPayment = { amount, status, monthIndex, date: new Date() };
+    const allPayments = [...missedPayments, currentPayment];
+
+    const update = {
+      $push: { payments: { $each: allPayments } },
+      $inc: {}
+    };
+
+    // --- Calculate pending increment ---
+    let pendingInc = missedDueTotal;
+
+    if (status === "paid") {
+      update.$inc.collectedAmount = amount;
+      
+      if (hasCurrentEntry) {
+        // This month already has payment, reduce pending by payment amount
+        pendingInc -= amount;
+      } else {
+        // First payment for this month
+        const thisMonthPendingInc = bookedChit.dailyAmount - amount;
+        pendingInc += thisMonthPendingInc;
+      }
+    } else if (status === "due") {
+      pendingInc += bookedChit.dailyAmount;
     }
 
     update.$inc.pendingAmount = pendingInc;
