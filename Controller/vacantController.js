@@ -279,7 +279,7 @@ export const approveVacantChit = async (req, res) => {
       collectedAmount: 0,
       pendingAmount: PendingAmountCalculate,
       status: "active",
-      month: new Date(),
+      month: createdAtDate,
       createdAt: createdAtDate
     });
     await bookedChit.save();

@@ -29,7 +29,6 @@ export const AllChitGroup = async (req, res) => {
   }
 };
 
-
 export const AllChitPlans = async (req, res) => {
   try {
     const chitPlans = await ChitGroup.find().select('groupCode chitValue durationMonths monthlyContribution dailyContribution');
@@ -182,23 +181,16 @@ export const BookingChit = async (req, res) => {
   }
 };
 
-
-
-export const monthlypayment = async (req, res) => {
+export const ArrearPayment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, status } = req.body;
+    const { amount } = req.body;
 
     // Basic manual validation
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return res
         .status(400)
         .json({ message: "Amount must be a positive number" });
-    }
-    if (!["paid", "due"].includes(status)) {
-      return res
-        .status(400)
-        .json({ message: 'Status must be either "paid" or "due"' });
     }
 
     // Fetch booked chit with user data
@@ -207,212 +199,208 @@ export const monthlypayment = async (req, res) => {
       return res.status(404).json({ message: "Booked Chit not found" });
     }
 
-    if (bookedChit.bookingType !== "monthly") {
+    // Check if sufficient pending amount
+    if (bookedChit.pendingAmount < amount) {
       return res
         .status(400)
-        .json({ message: "This is not a monthly booked chit" });
+        .json({ message: "Refund amount exceeds pending amount" });
     }
 
-    // Fetch chit group for auctionTable
-    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
-    if (!chitGroup) {
-      return res.status(404).json({ message: "Chit Group not found" });
-    }
-
-    // Custom monthIndex calculation for chit periods (10th to 9th)
-    const getChitMonthKey = (date) => {
-      const d = new Date(date);
-      let year = d.getFullYear();
-      let month = d.getMonth() + 1;
-      if (d.getDate() < 10) {
-        month = month === 1 ? 12 : month - 1;
-        year = month === 12 ? year - 1 : year;
-      }
-      return year * 12 + month;
+    // Prepare update
+    let updateData = {
+      $inc: { pendingAmount: -amount
+        , collectedAmount: amount
+       }
     };
-    const joinKey = getChitMonthKey(bookedChit.month);
-    const currentKey = getChitMonthKey(new Date());
-    const monthIndex = currentKey - joinKey + 1;
 
-    if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
-      return res
-        .status(400)
-        .json({ message: "Current month is invalid for this chit" });
+    // Check if pending will become 0 or less
+    if (bookedChit.pendingAmount - amount <= 0) {
+      updateData.$set = { status: "complete" };
     }
-
-    // Get auctionTable entry for current month
-    const tableEntry = chitGroup.auctionTable[monthIndex - 1];
-    if (!tableEntry) {
-      return res
-        .status(400)
-        .json({ message: "No auctionTable entry for this month" });
-    }
-
-    // Calculate total paid for this month
-    let monthPayments = bookedChit.payments
-      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
-      .reduce((sum, p) => sum + p.amount, 0);
-
-    // For monthly: Apply late penalty if past 15th in chit period and not paid
-    const currentChitMonthNum = currentKey % 12 || 12;
-    const chitYear = Math.floor(currentKey / 12);
-    const penaltyDate = new Date(chitYear, currentChitMonthNum - 1, 15);
-    if (
-      bookedChit.bookingType === "monthly" &&
-      new Date() > penaltyDate &&
-      monthPayments === 0
-    ) {
-      const hasAnyPayment = bookedChit.payments.some(
-        (p) => p.monthIndex === monthIndex
-      );
-      if (!hasAnyPayment) {
-        await BookedChit.findByIdAndUpdate(bookedChit._id, {
-          $inc: { PenaltyAmount: tableEntry.dividend },
-        });
-        // Reload bookedChit after update (though payments unchanged)
-        bookedChit = await BookedChit.findById(id).populate("userId");
-      }
-    }
-
-    // Recalculate after possible reload (though not necessary for payments)
-    const hasCurrentEntry = bookedChit.payments.some(
-      (p) => p.monthIndex === monthIndex
-    );
-
-    // Validate payment amount for 'paid'
-    if (status === "paid") {
-      if (
-        bookedChit.bookingType === "monthly" &&
-        amount !== tableEntry.dueAmount &&
-        monthIndex === 1
-      ) {
-        return res.status(400).json({
-          message: `Payment must be exactly ₹${tableEntry.dueAmount} for month ${monthIndex}`,
-        });
-      }
-      if (
-        bookedChit.bookingType === "daily" &&
-        monthPayments + amount > tableEntry.dueAmount
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Payment exceeds remaining due for this month" });
-      }
-    } else if (status === "due") {
-      if (hasCurrentEntry) {
-        return res
-          .status(400)
-          .json({ message: "You can only mark due once for the current month" });
-      }
-      if (amount !== tableEntry.dueAmount) {
-        return res
-          .status(400)
-          .json({
-            message: `Due amount must be exactly ₹${tableEntry.dueAmount} for month ${monthIndex}`,
-          });
-      }
-    }
-
-    // Auto add 'due' entries for any missed previous months
-    const missedPayments = [];
-    let missedDueTotal = 0;
-    for (let m = 1; m < monthIndex; m++) {
-      const hasEntryForM = bookedChit.payments.some((p) => p.monthIndex === m);
-      if (!hasEntryForM) {
-        const prevTable = chitGroup.auctionTable[m - 1];
-        missedPayments.push({
-          amount: prevTable.dueAmount,
-          status: "due",
-          monthIndex: m,
-          date: new Date(),
-        });
-        missedDueTotal += prevTable.dueAmount;
-      }
-    }
-
-    // Prepare payments to push
-    const currentPayment = {
-      amount,
-      status,
-      monthIndex,
-      date: new Date(),
-    };
-    const allNewPayments = missedPayments.length > 0 ? [...missedPayments, currentPayment] : [currentPayment];
 
     // Atomic update
-    const updateData = {
-      $push: { payments: { $each: allNewPayments } },
-    };
-
-    // Handle increments
-    updateData.$inc = {};
-    let pendingInc = missedDueTotal;
-
-    if (status === "paid") {
-      updateData.$inc.collectedAmount = amount;
-      const thisMonthPendingInc = hasCurrentEntry ? -amount : tableEntry.dueAmount - amount;
-      pendingInc += thisMonthPendingInc;
-    } else if (status === "due") {
-      pendingInc += tableEntry.dueAmount;
-    }
-
-    updateData.$inc.pendingAmount = pendingInc;
-
-    const entryPayment = await BookedChit.findByIdAndUpdate(
+    const updatedChit = await BookedChit.findByIdAndUpdate(
       bookedChit._id,
       updateData,
       { new: true }
-    );
+    ).populate("userId");
 
-    // Send push notification
+    res.status(200).json({
+      message: "Refund Processed Successfully",
+      data: { updatedChit }
+    });
+  } catch (error) {
+    console.error("Error in refund function:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const rejectChitExit = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const exitNotification = await ChitExit.findOne({ _id: id });
+    if (!exitNotification) {
+      return res.status(404).json({ message: "Pending chit exit request not found" });
+    }
+
+    // Get the booked chit and populate userId to get user details and agent
+    const bookedChit = await BookedChit.findOne({ _id: exitNotification.bookedchit })
+      .populate({
+        path: 'userId',
+        populate: { path: 'agent' }
+      });
+
+    if (!bookedChit || !bookedChit.userId) {
+      return res.status(404).json({ message: "Booked chit or user not found" });
+    }
+
     const user = bookedChit.userId;
-    if (user?.expoPushToken) {
-      const title = status === "paid" ? "Payment Successful" : "Payment Due";
-      const body =
-        status === "paid"
-          ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
-          : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
 
-      const messages = [
-        { to: user.expoPushToken, sound: "default", title, body },
-      ];
+    // Send push notification to user if they have expo push token
+    if (user.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: user.expoPushToken,
+        sound: 'default',
+        title: 'Chit Exit Rejected',
+        body: `Your request to exit the chit has been rejected.`,
+      }];
+
       const chunks = expo.chunkPushNotifications(messages);
-
-      for (const chunk of chunks) {
+      const tickets = [];
+      
+      for (let chunk of chunks) {
         try {
           const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
           for (const ticket of ticketChunk) {
             if (ticket.id) {
               await Notification.create({
                 userId: user._id,
-                chitId: bookedChit._id,
-                month: monthIndex,
-                title,
-                body,
-                year: new Date().getFullYear(),
-                notificationId: ticket.id,
-                status,
+                title: 'Chit Exit Rejected',
+                body: `Your request to exit the chit has been rejected.`,
+                notificationId: ticket.id
               });
             } else if (ticket.status === "error") {
               console.error(`Push notification failed: ${ticket.message}`);
             }
           }
         } catch (error) {
-          console.error("Error sending push notification:", error);
+          console.error('Error sending push notification:', error);
         }
       }
     }
 
-    res.status(200).json({
-      message: "Payment Entry Completed Successfully",
-      data: { entryPayment },
+    // Save agent notification
+    const agentNotification = new AgentNotification({
+      agentId: user.agent._id,
+      title: 'User Chit Exit Rejected',
+      description: `User ${user.name}'s chit exit request has been rejected.`
     });
+    await agentNotification.save();
+
+    // Delete the chit exit notification
+    await ChitExit.deleteOne({ _id: exitNotification._id });
+
+    res.status(200).json({ message: "Chit exit rejected successfully" });
+    
   } catch (error) {
-    console.error("Error in payment function:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error rejecting chit exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
   }
 };
 
+export const approveChitExit = async (req, res) => {
+  try {
+    const { id } = req.params; // notification id
+    
+    // Find the pending chit exit notification
+    const exitNotification = await ChitExit.findOne({ _id: id });
+    if (!exitNotification) {
+      return res.status(404).json({ message: "Pending chit exit request not found" });
+    }
+
+    // Get the booked chit and populate userId to get user details and agent
+    const bookedChit = await BookedChit.findById(exitNotification.bookedchit)
+      .populate({
+        path: 'userId',
+        populate: { path: 'agent' }
+      });
+
+    if (!bookedChit || !bookedChit.userId) {
+      return res.status(404).json({ message: "Booked chit or user not found" });
+    }
+
+    const user = bookedChit.userId;
+
+    // Update the booked chit status to 'closed'
+    await BookedChit.findByIdAndUpdate(
+      exitNotification.bookedchit,
+      { status: 'closed' },
+      { new: true }
+    );
+
+    // Update the booked chit status to 'closed'
+    await Auction.findByIdAndUpdate(
+      bookedChit.auction,
+      { status: 'cancel' },
+      { new: true }
+    );
+
+    // Send push notification to user if they have expo push token
+    if (user.expoPushToken) {
+      const expo = new Expo();
+      const messages = [{
+        to: user.expoPushToken,
+        sound: 'default',
+        title: 'Chit Exit Approved',
+        body: `Your request to exit the chit has been approved.`,
+      }];
+
+      const chunks = expo.chunkPushNotifications(messages);
+      const tickets = [];
+      
+      for (let chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          tickets.push(...ticketChunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                title: 'Chit Exit Approved',
+                body: `Your request to exit the chit has been approved.`,
+                notificationId: ticket.id
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
+    }
+
+    // Save agent notification
+    const agentNotification = new AgentNotification({
+      agentId: user.agent._id,
+      title: 'User Chit Exit Approved',
+      description: `User ${user.name}'s chit exit request has been approved.`
+    });
+    await agentNotification.save();
+
+  // Delete the chit exit notification
+    await ChitExit.deleteOne({ _id: exitNotification._id });
+
+    res.status(200).json({ message: "Chit exit approved successfully" });
+    
+  } catch (error) {
+    console.error("Error approving chit exit:", error);
+    res.status(500).json({ message: "Internal server error" });    
+  }
+};
 
 
 export const dailypayment = async (req, res) => {
@@ -611,226 +599,222 @@ export const dailypayment = async (req, res) => {
 };
 
 
-export const ArrearPayment = async (req, res) => {
+export const monthlypayment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount } = req.body;
+    const { amount, status } = req.body;
 
-    // Basic manual validation
     if (!amount || typeof amount !== "number" || amount <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Amount must be a positive number" });
+      return res.status(400).json({ message: "Amount must be a positive number" });
+    }
+    if (!["paid", "due"].includes(status)) {
+      return res.status(400).json({ message: 'Status must be either "paid" or "due"' });
     }
 
-    // Fetch booked chit with user data
     let bookedChit = await BookedChit.findById(id).populate("userId");
-    if (!bookedChit) {
-      return res.status(404).json({ message: "Booked Chit not found" });
+    if (!bookedChit) return res.status(404).json({ message: "Booked Chit not found" });
+
+    if (bookedChit.bookingType !== "monthly") {
+      return res.status(400).json({ message: "This is not a monthly booked chit" });
     }
 
-    // Check if sufficient pending amount
-    if (bookedChit.pendingAmount < amount) {
-      return res
-        .status(400)
-        .json({ message: "Refund amount exceeds pending amount" });
-    }
+    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+    if (!chitGroup) return res.status(404).json({ message: "Chit Group not found" });
 
-    // Prepare update
-    let updateData = {
-      $inc: { pendingAmount: -amount
-        , collectedAmount: amount
-       }
+    // Month logic
+    const getChitMonthKey = (date) => {
+      const d = new Date(date);
+      let year = d.getFullYear();
+      let month = d.getMonth() + 1;
+      if (d.getDate() < 10) {
+        month = month === 1 ? 12 : month - 1;
+        year = month === 12 ? year - 1 : year;
+      }
+      return year * 12 + month;
     };
 
-    // Check if pending will become 0 or less
-    if (bookedChit.pendingAmount - amount <= 0) {
-      updateData.$set = { status: "complete" };
+    const joinKey = getChitMonthKey(bookedChit.month);
+    const currentKey = getChitMonthKey(new Date());
+    const monthIndex = currentKey - joinKey + 1;
+
+    if (monthIndex < 1 || monthIndex > chitGroup.durationMonths) {
+      return res.status(400).json({ message: "Invalid month in chit cycle" });
     }
 
-    // Atomic update
-    const updatedChit = await BookedChit.findByIdAndUpdate(
-      bookedChit._id,
-      updateData,
-      { new: true }
-    ).populate("userId");
+    const tableEntry = chitGroup.auctionTable[monthIndex - 1];
+    if (!tableEntry) {
+      return res.status(400).json({ message: "No auction table for this month" });
+    }
+
+    // --- Identify Chit Type ---
+    const isFirstPayment = bookedChit.payments.length === 0;
+    const isRegularChit = isFirstPayment && bookedChit.pendingAmount === 0;
+    const isVacantChit = isFirstPayment && bookedChit.pendingAmount > 0;
+
+    // total paid this month
+    let monthPayments = bookedChit.payments
+      .filter((p) => p.monthIndex === monthIndex && p.status === "paid")
+      .reduce((sum, p) => sum + p.amount, 0);
+
+    const hasCurrentEntry = bookedChit.payments.some((p) => p.monthIndex === monthIndex);
+    const remainDue = tableEntry.dueAmount - monthPayments;
+    
+
+    const hasThisMonth = bookedChit.payments.some((p) => p.monthIndex === monthIndex);
+
+    // --- Payment Validations ---
+    if (status === "paid") {
+      // If this month already has entry, can only pay up to pendingAmount
+      if (hasCurrentEntry) {
+        if (amount > bookedChit.pendingAmount) {
+          return res.status(400).json({ 
+            message: `Payment cannot exceed remaining pending amount ₹${bookedChit.pendingAmount}` 
+          });
+        }
+      } else {
+        // First payment for this month
+        // Maximum allowed = dueAmount + pendingAmount
+        const maxAllowed = tableEntry.dueAmount + bookedChit.pendingAmount;
+        
+        if (amount > maxAllowed) {
+          return res.status(400).json({ 
+            message: `Payment cannot exceed ₹${maxAllowed} (Due: ₹${tableEntry.dueAmount} + Pending: ₹${bookedChit.pendingAmount})` 
+          });
+        }
+
+        // For regular chit first payment, must pay exact dueAmount
+        if (isRegularChit && amount !== tableEntry.dueAmount) {
+          return res.status(400).json({ 
+            message: `Must pay exact ₹${tableEntry.dueAmount} as first payment` 
+          });
+        }
+      }
+    }
+
+    if (status === "due") {
+      if (hasThisMonth) {
+        return res.status(400).json({ message: "Due already marked for this month" });
+      }
+
+      if (amount !== tableEntry.dueAmount) {
+        return res.status(400).json({ message: `Due must be exact ₹${tableEntry.dueAmount}` });
+      }
+    }
+
+    // --- Late Penalty (after 15th) ---
+    const currentChitMonth = currentKey % 12 || 12;
+    const currentYear = Math.floor(currentKey / 12);
+    const penaltyDate = new Date(currentYear, currentChitMonth - 1, 15);
+    let hasPaymentThisMonth = bookedChit.payments.some((p) => p.monthIndex === monthIndex);
+
+    if (new Date() > penaltyDate && !hasPaymentThisMonth) {
+      if (isRegularChit || (!isRegularChit && bookedChit.payments.length > 0)) {
+        await BookedChit.findByIdAndUpdate(bookedChit._id, {
+          $inc: { PenaltyAmount: tableEntry.dividend },
+        });
+        bookedChit = await BookedChit.findById(id).populate("userId");
+      }
+    }
+
+    // --- Missed dues auto add (Only Regular and only on first entry for the month) ---
+    const missedPayments = [];
+    let missedDueTotal = 0;
+
+    if (!hasThisMonth && !isVacantChit) {
+      for (let m = 1; m < monthIndex; m++) {
+        const monthPaymentsM = bookedChit.payments
+          .filter((p) => p.monthIndex === m && p.status === "paid")
+          .reduce((sum, p) => sum + p.amount, 0);
+        const prevTable = chitGroup.auctionTable[m - 1];
+        const unpaidM = prevTable.dueAmount - monthPaymentsM;
+        if (unpaidM === prevTable.dueAmount) {
+          missedPayments.push({
+            amount: unpaidM,
+            status: "due",
+            monthIndex: m,
+            date: new Date(),
+          });
+          missedDueTotal += unpaidM;
+        }
+      }
+    }
+
+    const currentPayment = { amount, status, monthIndex, date: new Date() };
+    const allPayments = [...missedPayments, currentPayment];
+
+    const update = {
+      $push: { payments: { $each: allPayments } },
+      $inc: {}
+    };
+
+    // --- CORRECTED LOGIC: Calculate pending increment ---
+    let pendingInc = missedDueTotal;
+
+    if (status === "paid") {
+      update.$inc.collectedAmount = amount;
+      
+      if (hasCurrentEntry) {
+        // This month already has payment, reduce pending by payment amount
+        pendingInc -= amount;
+      } else {
+        // First payment for this month
+        const thisMonthPendingInc = tableEntry.dueAmount - amount;
+        pendingInc += thisMonthPendingInc;
+      }
+    } else if (status === "due") {
+      pendingInc += tableEntry.dueAmount;
+    }
+
+    update.$inc.pendingAmount = pendingInc;
+
+    const entryPayment = await BookedChit.findByIdAndUpdate(bookedChit._id, update, { new: true });
+
+    // Send push notification
+    const user = bookedChit.userId;
+    if (user?.expoPushToken) {
+      const title = status === "paid" ? "Payment Successful" : "Payment Due";
+      const body =
+        status === "paid"
+          ? `You have paid ₹${amount} successfully for month ${monthIndex}!`
+          : `A payment of ₹${amount} is pending for month ${monthIndex}. Please complete it soon.`;
+
+      const messages = [
+        { to: user.expoPushToken, sound: "default", title, body },
+      ];
+      const chunks = expo.chunkPushNotifications(messages);
+
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                chitId: bookedChit._id,
+                month: monthIndex,
+                title,
+                body,
+                year: new Date().getFullYear(),
+                notificationId: ticket.id,
+                status,
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error("Error sending push notification:", error);
+        }
+      }
+    }
 
     res.status(200).json({
-      message: "Refund Processed Successfully",
-      data: { updatedChit }
+      message: "Payment Entry Completed Successfully",
+      data: { entryPayment },
     });
-  } catch (error) {
-    console.error("Error in refund function:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
-
-
-export const rejectChitExit = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const exitNotification = await ChitExit.findOne({ _id: id });
-    if (!exitNotification) {
-      return res.status(404).json({ message: "Pending chit exit request not found" });
-    }
-
-    // Get the booked chit and populate userId to get user details and agent
-    const bookedChit = await BookedChit.findOne({ _id: exitNotification.bookedchit })
-      .populate({
-        path: 'userId',
-        populate: { path: 'agent' }
-      });
-
-    if (!bookedChit || !bookedChit.userId) {
-      return res.status(404).json({ message: "Booked chit or user not found" });
-    }
-
-    const user = bookedChit.userId;
-
-    // Send push notification to user if they have expo push token
-    if (user.expoPushToken) {
-      const expo = new Expo();
-      const messages = [{
-        to: user.expoPushToken,
-        sound: 'default',
-        title: 'Chit Exit Rejected',
-        body: `Your request to exit the chit has been rejected.`,
-      }];
-
-      const chunks = expo.chunkPushNotifications(messages);
-      const tickets = [];
-      
-      for (let chunk of chunks) {
-        try {
-          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-          tickets.push(...ticketChunk);
-          for (const ticket of ticketChunk) {
-            if (ticket.id) {
-              await Notification.create({
-                userId: user._id,
-                title: 'Chit Exit Rejected',
-                body: `Your request to exit the chit has been rejected.`,
-                notificationId: ticket.id
-              });
-            } else if (ticket.status === "error") {
-              console.error(`Push notification failed: ${ticket.message}`);
-            }
-          }
-        } catch (error) {
-          console.error('Error sending push notification:', error);
-        }
-      }
-    }
-
-    // Save agent notification
-    const agentNotification = new AgentNotification({
-      agentId: user.agent._id,
-      title: 'User Chit Exit Rejected',
-      description: `User ${user.name}'s chit exit request has been rejected.`
-    });
-    await agentNotification.save();
-
-    // Delete the chit exit notification
-    await ChitExit.deleteOne({ _id: exitNotification._id });
-
-    res.status(200).json({ message: "Chit exit rejected successfully" });
-    
-  } catch (error) {
-    console.error("Error rejecting chit exit:", error);
-    res.status(500).json({ message: "Internal server error" });    
-  }
-};
-
-
-export const approveChitExit = async (req, res) => {
-  try {
-    const { id } = req.params; // notification id
-    
-    // Find the pending chit exit notification
-    const exitNotification = await ChitExit.findOne({ _id: id });
-    if (!exitNotification) {
-      return res.status(404).json({ message: "Pending chit exit request not found" });
-    }
-
-    // Get the booked chit and populate userId to get user details and agent
-    const bookedChit = await BookedChit.findById(exitNotification.bookedchit)
-      .populate({
-        path: 'userId',
-        populate: { path: 'agent' }
-      });
-
-    if (!bookedChit || !bookedChit.userId) {
-      return res.status(404).json({ message: "Booked chit or user not found" });
-    }
-
-    const user = bookedChit.userId;
-
-    // Update the booked chit status to 'closed'
-    await BookedChit.findByIdAndUpdate(
-      exitNotification.bookedchit,
-      { status: 'closed' },
-      { new: true }
-    );
-
-    // Update the booked chit status to 'closed'
-    await Auction.findByIdAndUpdate(
-      bookedChit.auction,
-      { status: 'cancel' },
-      { new: true }
-    );
-
-    // Send push notification to user if they have expo push token
-    if (user.expoPushToken) {
-      const expo = new Expo();
-      const messages = [{
-        to: user.expoPushToken,
-        sound: 'default',
-        title: 'Chit Exit Approved',
-        body: `Your request to exit the chit has been approved.`,
-      }];
-
-      const chunks = expo.chunkPushNotifications(messages);
-      const tickets = [];
-      
-      for (let chunk of chunks) {
-        try {
-          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-          tickets.push(...ticketChunk);
-          for (const ticket of ticketChunk) {
-            if (ticket.id) {
-              await Notification.create({
-                userId: user._id,
-                title: 'Chit Exit Approved',
-                body: `Your request to exit the chit has been approved.`,
-                notificationId: ticket.id
-              });
-            } else if (ticket.status === "error") {
-              console.error(`Push notification failed: ${ticket.message}`);
-            }
-          }
-        } catch (error) {
-          console.error('Error sending push notification:', error);
-        }
-      }
-    }
-
-    // Save agent notification
-    const agentNotification = new AgentNotification({
-      agentId: user.agent._id,
-      title: 'User Chit Exit Approved',
-      description: `User ${user.name}'s chit exit request has been approved.`
-    });
-    await agentNotification.save();
-
-  // Delete the chit exit notification
-    await ChitExit.deleteOne({ _id: exitNotification._id });
-
-    res.status(200).json({ message: "Chit exit approved successfully" });
-    
-  } catch (error) {
-    console.error("Error approving chit exit:", error);
-    res.status(500).json({ message: "Internal server error" });    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
