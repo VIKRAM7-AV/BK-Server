@@ -947,17 +947,27 @@ export const dailypayment = async (req, res) => {
         const monthPaymentsM = bookedChit.payments
           .filter((p) => p.monthIndex === m && p.status === "paid")
           .reduce((sum, p) => sum + p.amount, 0);
+
+        const monthlyPaymentD = bookedChit.payments
+          .filter((p) => p.monthIndex === m && p.status === "due")
+          .reduce((sum, p) => sum + p.amount, 0);
+
         const prevTable = chitGroup.auctionTable[m - 1];
+
+
         const unpaidM = prevTable.dueAmount - monthPaymentsM;
-        
-        if (unpaidM === prevTable.dueAmount) {
-          missedPayments.push({
-            amount: bookedChit.dailyAmount,
-            status: "due",
-            monthIndex: m,
-            date: new Date(),
-          });
-          missedDueTotal += bookedChit.dailyAmount;
+        const unpaidD = prevTable.dueAmount - monthlyPaymentD;
+
+        console.log(`Month ${m}: unpaidM=${unpaidM}, unpaidD=${unpaidD}, dueAmount=${prevTable.dueAmount}`);
+
+        if (unpaidM === prevTable.dueAmount && unpaidD === 0) {
+            missedPayments.push({
+              amount: unpaidM,
+              status: "due",
+              monthIndex: m,
+              date: new Date(),
+            });
+            missedDueTotal += unpaidM;
         }
       }
     }
@@ -972,6 +982,7 @@ export const dailypayment = async (req, res) => {
 
     // --- Calculate pending increment ---
     let pendingInc = missedDueTotal;
+    console.log(`Missed due total: ₹${missedDueTotal}`);
 
     if (status === "paid") {
       update.$inc.collectedAmount = amount;
