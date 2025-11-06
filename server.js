@@ -17,6 +17,7 @@ import DailyRoute from './Routes/DailyRoute.js';
 import MonthlyRoute from './Routes/MonthlyRoute.js';
 import vacantRoute from './Routes/vacantRoute.js';
 import { v2 as cloudinary } from 'cloudinary';
+import AdminRoute from './Routes/adminRoute.js';
 import auctionRoute from './Routes/auctionRoute.js';
 
 dotenv.config();
@@ -56,6 +57,7 @@ app.use("/api/dailycollection",DailyRoute)
 app.use('/api/monthlycollection',MonthlyRoute);
 app.use('/api/vacantchit', vacantRoute);
 app.use('/api/auctiondata', auctionRoute);
+app.use('/api/admin', AdminRoute);
 
 
 app.use('/test', (req, res) => {
