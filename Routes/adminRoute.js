@@ -1,8 +1,6 @@
 import express from 'express';
 import { verifyToken } from "../utils/jwt.js";
-import { LoginAdmin, RefreshTokenCon, Getme, NewAdmin, getallUsers, getdailyChitusers, getdailyChitusersReport } from '../Controller/AdminController.js';
-
-
+import { LoginAdmin, RefreshTokenCon, Getme, NewAdmin, getallUsers,ResetPassword,AllAgents, getdailyChitusers, getdailyChitusersReport,SendOTP, VerifyOTP, getmonthlyChitusers, getmonthlyChitusersReport, GetCountUsers, DueList, ArrearList } from '../Controller/AdminController.js';
 
 export const authenticateAdmin = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -28,5 +26,14 @@ router.get("/me", authenticateAdmin, Getme);
 router.get('/allusers', getallUsers);
 router.get('/dailychitusers', getdailyChitusers);
 router.get('/dailychitusersreport', getdailyChitusersReport);
+router.get('/monthlychitusers', getmonthlyChitusers);
+router.get('/monthlychitusersreport', getmonthlyChitusersReport);
+router.get('/dashboard', GetCountUsers)
+router.post('/sendotp', SendOTP);
+router.post('/verifyotp', VerifyOTP);
+router.post('/resetpassword', ResetPassword);
+router.get('/alldues', DueList)
+router.get('/arrearlist',ArrearList)
+router.get('/allagents',AllAgents)
 
 export default router;

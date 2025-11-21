@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 
 const auctionSchema = new mongoose.Schema({
-  month: {
-    type: Date,
-  },
   payment: {
     type:Number,
   },
@@ -24,13 +21,16 @@ const auctionSchema = new mongoose.Schema({
   },
   auctionDate: {
     type: Date
+  },
+  cheque: {
+    type: String
+  },
+  chequeImage: {
+    type: String
   }
 }, { timestamps: true });
 
 const Auction = mongoose.model("Auction", auctionSchema);
-
-
-
 
 
 
@@ -43,14 +43,6 @@ const paymentSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
-
-
-
-
-
-
-
 
 
 const bookedChitSchema = new mongoose.Schema(

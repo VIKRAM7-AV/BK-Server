@@ -1,6 +1,9 @@
 import express from "express";
-import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin, Getme,DailyChits, getallUsers, getAllAgents, MonthlyChits, getBookedChitDetails, ChangePin, ArrearDailyChits, ArrearMonthlyChits } from "../Controller/AgentController.js";
+import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin, Getme,DailyChits, getallUsers, getAllAgents, MonthlyChits, getBookedChitDetails, ChangePin, ArrearDailyChits, ArrearMonthlyChits, updateAgent } from "../Controller/AgentController.js";
 import { verifyToken } from "../utils/jwt.js";
+import multer from "multer";
+
+const upload = multer({ dest: 'uploads/' });
 
 // Inlined authenticateAgent middleware to avoid external module path/case issues during deploy
 export const authenticateAgent = (req, res, next) => {
@@ -21,7 +24,7 @@ export const authenticateAgent = (req, res, next) => {
 const router = express.Router();
 
 
-router.post("/newagent", NewAgent);
+router.post("/newagent", upload.single('image'), NewAgent);
 router.post("/setpin", SetPin);
 router.post("/changepin", ChangePin);
 router.post("/forgetpin", ForgetPin);
@@ -36,6 +39,7 @@ router.get("/chitdetails", getBookedChitDetails);
 router.get("/allagents", getAllAgents);
 router.get("/arreardaily/:agentId", ArrearDailyChits);
 router.get("/arrearmonthly/:agentId", ArrearMonthlyChits);
+router.put('/updateagent/:id', upload.single('image'), updateAgent);
 
 
 export default router;

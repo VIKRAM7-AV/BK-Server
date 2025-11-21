@@ -15,7 +15,8 @@ const expo = new Expo();
 
 export const NewAgent = async (req, res) => {
   try {
-    const { name, phone, permanentAddress, dob, profile } = req.body;
+    const { name, phone, permanentAddress, dob, route } = req.body;
+    const profileFile = req.file;
 
     if (!name || !phone || !permanentAddress || !dob) {
       return res.status(400).json({ error: "All fields are required" });
@@ -31,11 +32,12 @@ export const NewAgent = async (req, res) => {
     }
 
     let profileUrl = null;
-    if (profile) {
-      const image = await cloudinary.uploader.upload(profile, {
+    if (profileFile) {
+      const image = await cloudinary.uploader.upload(profileFile.path, {
         folder: "agent_profiles",
         width: 500,
         crop: "scale",
+        resource_type: 'auto'
       });
       profileUrl = image.secure_url;
     }
@@ -46,6 +48,7 @@ export const NewAgent = async (req, res) => {
       phone,
       permanentAddress,
       profile: profileUrl,
+      route
     });
 
     await newagent.save();
@@ -427,7 +430,7 @@ export const MonthlyChits = async (req, res) => {
 export const getBookedChitDetails = async (req, res) => {
   try {
 
-    const bookingChits = await BookedChit.find({ status: "active" }) // Now this will work!
+    const bookingChits = await BookedChit.find({ status: "active" })
       .populate({
         path: "userId",
         populate: {
@@ -561,5 +564,107 @@ export const ArrearMonthlyChits = async (req, res) => {
   } catch (error) {
     console.error("Error fetching monthly chits:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
+const deleteOldImage = async (imageUrl) => {
+  if (!imageUrl) return;
+
+  try {
+    // Extract public_id from Cloudinary URL
+    // Example URL: https://res.cloudinary.com/demo/image/upload/v1234567890/agent_profiles/abc123.jpg
+    const urlParts = imageUrl.split("/");
+    // Find 'upload' index and get everything after version number
+    const uploadIndex = urlParts.indexOf('upload');
+    if (uploadIndex === -1) return;
+    
+    // Get folder/filename without extension
+    const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+    const publicId = publicIdWithExt.substring(0, publicIdWithExt.lastIndexOf('.'));
+
+    await cloudinary.uploader.destroy(publicId);
+    console.log("Old image deleted:", publicId);
+  } catch (err) {
+    console.error("Error deleting old image from Cloudinary:", err);
+    // Don't throw — failing to delete old image shouldn't block update
+  }
+};
+
+export const updateAgent = async (req, res) => {
+  try {
+    const { id } = req.params; // assuming you're passing agent ID in URL: PUT /api/agents/:id
+    const { name, phone, permanentAddress, dob, route } = req.body;
+    const newProfileFile = req.file; // multer uploaded file
+
+    console.log('Update agent request:', { id, body: req.body, hasFile: !!req.file });
+
+    if (!id) {
+      return res.status(400).json({ error: "Agent ID is required" });
+    }
+
+    const agent = await Agent.findById(id);
+    if (!agent) {
+      return res.status(404).json({ error: "Agent not found" });
+    }
+
+    // Check phone uniqueness (allow same phone for same agent)
+    if (phone && phone.toString() !== agent.phone.toString()) {
+      if (!phone.toString().match(/^[6-9]\d{9}$/)) {
+        return res.status(400).json({ error: "Invalid phone number format" });
+      }
+
+      const existingAgent = await Agent.findOne({ phone });
+      if (existingAgent && existingAgent._id.toString() !== id) {
+        return res.status(400).json({ error: "Phone number already in use by another agent" });
+      }
+    }
+
+    let profileUrl = agent.profile; // keep old one by default
+
+    // If new image is uploaded → upload to Cloudinary & delete old one
+    if (newProfileFile) {
+      // Upload new image
+      const uploadResult = await cloudinary.uploader.upload(newProfileFile.path, {
+        folder: "agent_profiles",
+        width: 500,
+        crop: "scale",
+        resource_type: "auto",
+      });
+
+      profileUrl = uploadResult.secure_url;
+
+      // Delete old image if existed and is a Cloudinary URL
+      if (agent.profile && agent.profile.includes("res.cloudinary.com")) {
+        await deleteOldImage(agent.profile);
+      }
+
+    }
+
+    const updatedData = {
+      ...(name && { name }),
+      ...(phone && { phone }),
+      ...(permanentAddress && { permanentAddress }),
+      ...(dob && { dob }),
+      ...(route && { route }),
+      profile: profileUrl,
+    };
+
+    const updatedAgent = await Agent.findByIdAndUpdate(
+      id,
+      { $set: updatedData },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({
+      message: "Agent updated successfully",
+      agent: updatedAgent,
+    });
+  } catch (error) {
+    console.error("Update agent error:", error);
+    return res.status(500).json({ error: error.message || "Server error" });
   }
 };
