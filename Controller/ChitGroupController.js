@@ -146,6 +146,11 @@ export const BookingChit = async (req, res) => {
     });
     await auction.save();
 
+    // Calculate lastDate based on durationMonths from chit group
+    const startDate = new Date();
+    const lastDate = new Date(startDate);
+    lastDate.setMonth(lastDate.getMonth() + chit.durationMonths);
+
     const bookedChit = new BookedChit({
       chitId,
       userId,
@@ -156,7 +161,8 @@ export const BookingChit = async (req, res) => {
       auction: auction._id,
       collectedAmount: 0,
       status: "active",
-      month: new Date(),
+      month: startDate,
+      lastDate: { date: lastDate },
     });
 
     await bookedChit.save();
@@ -958,8 +964,7 @@ export const dailypayment = async (req, res) => {
         const unpaidM = prevTable.dueAmount - monthPaymentsM;
         const unpaidD = prevTable.dueAmount - monthlyPaymentD;
 
-        console.log(`Month ${m}: unpaidM=${unpaidM}, unpaidD=${unpaidD}, dueAmount=${prevTable.dueAmount}`);
-
+        
         if (unpaidM === prevTable.dueAmount && unpaidD === 0) {
             missedPayments.push({
               amount: unpaidM,
@@ -988,8 +993,25 @@ export const dailypayment = async (req, res) => {
       update.$inc.collectedAmount = amount;
       
       if (hasCurrentEntry) {
-        // This month already has payment, reduce pending by payment amount
-        pendingInc -= amount;
+        // This month already has payment
+        // If paying towards old pending, reduce pending
+        if (bookedChit.pendingAmount > 0) {
+          const oldPending = bookedChit.pendingAmount;
+          const payingTowardsPending = Math.min(amount, oldPending);
+          pendingInc -= payingTowardsPending;
+          
+          // If payment exceeds old pending, the excess goes towards today's daily amount
+          const excessAmount = amount - payingTowardsPending;
+          if (excessAmount > 0 && excessAmount < bookedChit.dailyAmount) {
+            // Still short of daily amount, add remaining to pending
+            pendingInc += (bookedChit.dailyAmount - excessAmount);
+          }
+        } else {
+          // No old pending, just calculate for today's daily amount
+          if (amount < bookedChit.dailyAmount) {
+            pendingInc += (bookedChit.dailyAmount - amount);
+          }
+        }
       } else {
         // First payment for this month
         const thisMonthPendingInc = bookedChit.dailyAmount - amount;
@@ -1052,3 +1074,128 @@ export const dailypayment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const editPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, status } = req.body;
+
+    // Validation
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      return res.status(400).json({ message: "Amount must be a positive number" });
+    }
+
+    if (!["paid", "due"].includes(status)) {
+      return res.status(400).json({ message: 'Status must be either "paid" or "due"' });
+    }
+
+    // Find the booked chit
+    const bookedChit = await BookedChit.findById(id).populate("userId");
+    if (!bookedChit) {
+      return res.status(404).json({ message: "Booked Chit not found" });
+    }
+
+    // Check if there are any payments
+    if (!bookedChit.payments || bookedChit.payments.length === 0) {
+      return res.status(400).json({ message: "No payments found to edit" });
+    }
+
+    // Get the last payment
+    const lastPayment = bookedChit.payments[bookedChit.payments.length - 1];
+    const originalAmount = lastPayment.amount;
+    const originalStatus = lastPayment.status;
+
+    // Check if amount is unchanged
+    if (amount === originalAmount && status === originalStatus) {
+      return res.status(400).json({ message: "No changes detected" });
+    }
+
+    const chitGroup = await ChitGroup.findById(bookedChit.chitId);
+    if (!chitGroup) {
+      return res.status(404).json({ message: "Chit Group not found" });
+    }
+
+    // Calculate the difference
+    const amountDifference = amount - originalAmount;
+
+    // Prepare update object
+    const update = {
+      $set: {
+        [`payments.${bookedChit.payments.length - 1}.amount`]: amount,
+        [`payments.${bookedChit.payments.length - 1}.status`]: status,
+      },
+      $inc: {}
+    };
+
+    // Update collectedAmount and pendingAmount based on status changes
+    if (originalStatus === "paid" && status === "paid") {
+      // Both paid: just adjust collectedAmount and pendingAmount by difference
+      update.$inc.collectedAmount = amountDifference;
+      update.$inc.pendingAmount = -amountDifference;
+    } else if (originalStatus === "paid" && status === "due") {
+      // Changed from paid to due: reverse the paid amount
+      update.$inc.collectedAmount = -originalAmount;
+      update.$inc.pendingAmount = originalAmount;
+    } else if (originalStatus === "due" && status === "paid") {
+      // Changed from due to paid: add to collected, remove from pending
+      update.$inc.collectedAmount = amount;
+      update.$inc.pendingAmount = -amount;
+    } else if (originalStatus === "due" && status === "due") {
+      // Both due: adjust pendingAmount by difference
+      update.$inc.pendingAmount = amountDifference;
+    }
+
+    // Update the booked chit
+    const updatedChit = await BookedChit.findByIdAndUpdate(
+      bookedChit._id,
+      update,
+      { new: true }
+    ).populate("userId");
+
+    // Send push notification if status or significant change
+    const user = bookedChit.userId;
+    if (user?.expoPushToken) {
+      const title = "Payment Updated";
+      const body = `Your payment has been updated to ₹${amount} (${status})`;
+
+      const messages = [
+        { to: user.expoPushToken, sound: "default", title, body },
+      ];
+      const chunks = expo.chunkPushNotifications(messages);
+
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          for (const ticket of ticketChunk) {
+            if (ticket.id) {
+              await Notification.create({
+                userId: user._id,
+                chitId: bookedChit._id,
+                month: lastPayment.monthIndex,
+                title,
+                body,
+                year: new Date().getFullYear(),
+                notificationId: ticket.id,
+                status,
+              });
+            } else if (ticket.status === "error") {
+              console.error(`Push notification failed: ${ticket.message}`);
+            }
+          }
+        } catch (error) {
+          console.error("Error sending push notification:", error);
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: "Payment updated successfully",
+      data: { updatedChit },
+    });
+
+  } catch (error) {
+    console.error("Error editing payment:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
