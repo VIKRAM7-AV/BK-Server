@@ -25,16 +25,7 @@ DayCollectionSchema.pre("save", function (next) {
     return payment.status === "paid" ? sum + payment.amount : sum;
   }, 0);
 
-  // Only calculate dueAmount from payments with status "due"
-  const paymentDueAmount = this.payments.reduce((sum, payment) => {
-    return payment.status === "due" ? sum + payment.amount : sum;
-  }, 0);
-
-  // Preserve manually added dueAmount if it's greater than payment-based calculation
-  if (this.dueAmount < paymentDueAmount) {
-    this.dueAmount = paymentDueAmount;
-  }
-
+  // Keep manually managed dueAmount untouched so controllers can append incremental dues
   next();
 });
 

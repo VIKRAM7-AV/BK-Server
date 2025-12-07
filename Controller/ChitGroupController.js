@@ -10,6 +10,46 @@ import { ChitExit } from "../Model/EnquiryModal.js";
 import AgentNotification from "../Model/AgentNotification.js";
 const expo = new Expo();
 
+// Helper function to check and update BookedChit status based on lastDate and pendingAmount
+const checkAndUpdateChitStatus = async (bookedChitId) => {
+  try {
+    const bookedChit = await BookedChit.findById(bookedChitId);
+    if (!bookedChit) return;
+
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    // If lastDate exists and current date is >= lastDate
+    if (bookedChit.lastDate) {
+      const lastDate = new Date(bookedChit.lastDate);
+      lastDate.setHours(0, 0, 0, 0);
+
+      if (currentDate >= lastDate) {
+        if (bookedChit.pendingAmount === 0) {
+          // No pending amount, mark as completed
+          await BookedChit.findByIdAndUpdate(bookedChitId, {
+            status: "completed"
+          });
+          console.log(`BookedChit ${bookedChitId} status updated to completed`);
+        } else if (bookedChit.pendingAmount !== 0) {
+          // Has pending amount, mark as arrear
+          await BookedChit.findByIdAndUpdate(bookedChitId, {
+            status: "arrear"
+          });
+          console.log(`BookedChit ${bookedChitId} status updated to arrear`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Error updating chit status for ${bookedChitId}:`, error);
+  }
+};
+
+// Function to validate and update status after payment entry
+const validateAndUpdateStatus = async (bookedChitId) => {
+  await checkAndUpdateChitStatus(bookedChitId);
+};
+
 export const ChitGroupController = async (req, res) => {
   try {
     const newChitGroup = new ChitGroup(req.body);
@@ -156,13 +196,13 @@ export const BookingChit = async (req, res) => {
       userId,
       GroupUserId: groupUserId,
       bookingType,
-      monthlyAmount: chit.monthlyContribution,
-      dailyAmount: chit.dailyContribution,
+      monthlyAmount: chit.monthlyContribution || 0,
+      dailyAmount: chit.dailyContribution || 0,
       auction: auction._id,
       collectedAmount: 0,
       status: "active",
       month: startDate,
-      lastDate: { date: lastDate },
+      lastDate: lastDate,
     });
 
     await bookedChit.save();
@@ -775,6 +815,9 @@ export const monthlypayment = async (req, res) => {
 
     const entryPayment = await BookedChit.findByIdAndUpdate(bookedChit._id, update, { new: true });
 
+    // Check and update status based on lastDate and pendingAmount
+    await validateAndUpdateStatus(bookedChit._id);
+
     // Send push notification
     const user = bookedChit.userId;
     if (user?.expoPushToken) {
@@ -920,9 +963,6 @@ export const dailypayment = async (req, res) => {
     }
 
     if (status === "due") {
-      if (hasCurrentEntry) {
-        return res.status(400).json({ message: "Due already marked for this month" });
-      }
 
       if (amount !== bookedChit.dailyAmount) {
         return res.status(400).json({ message: `Due must be exact ₹${bookedChit.dailyAmount}` });
@@ -1024,6 +1064,9 @@ export const dailypayment = async (req, res) => {
     update.$inc.pendingAmount = pendingInc;
 
     const entryPayment = await BookedChit.findByIdAndUpdate(bookedChit._id, update, { new: true });
+
+    // Check and update status based on lastDate and pendingAmount
+    await validateAndUpdateStatus(bookedChit._id);
 
     // Send push notification
     const user = bookedChit.userId;

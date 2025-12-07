@@ -23,8 +23,7 @@ const MonthlyCollectionSchema = new mongoose.Schema({
 // Auto calculate totals per month
 MonthCollectionSchema.pre("save", function(next) {
   this.totalAmount = this.payments.reduce((sum, payment) => payment.status === "paid" ? sum + payment.amount : sum, 0);
-  this.dueAmount = this.payments.reduce((sum, payment) => payment.status === "due" ? sum + payment.amount : sum, 0);
-  next();
+   next();
 });
 
 const MonthlyCollection = mongoose.model("MonthlyCollection", MonthlyCollectionSchema);

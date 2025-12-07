@@ -46,6 +46,10 @@ export const CreateDailyCollection = async (req, res) => {
       }
     }
 
+    if (status === "due") {
+      todayDay.dueAmount += amount;
+    }
+
     // 6️⃣ Save the document
     await dailyCollection.save();
 
@@ -143,12 +147,16 @@ export const EditDailyPayment = async (req, res) => {
     let oldDueContribution = 0;
     if (originalStatus === "paid" && originalAmount < bookedChitData.dailyAmount) {
       oldDueContribution = bookedChitData.dailyAmount - originalAmount;
+    } else if (originalStatus === "due") {
+      oldDueContribution = originalAmount;
     }
 
     // Calculate new due contribution
     let newDueContribution = 0;
     if (status === "paid" && amount < bookedChitData.dailyAmount) {
       newDueContribution = bookedChitData.dailyAmount - amount;
+    } else if (status === "due") {
+      newDueContribution = amount;
     }
 
     // Adjust dueAmount manually
@@ -171,4 +179,3 @@ export const EditDailyPayment = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-

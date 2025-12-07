@@ -81,7 +81,7 @@ const bookedChitSchema = new mongoose.Schema(
     },
 
     payments: [paymentSchema],
-    lastDate: { date: Date },
+    lastDate: { type: Date },
   },
   { timestamps: true }
 );
