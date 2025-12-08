@@ -297,18 +297,54 @@ export const approveAuction = async (req, res) => {
         });
         await newAuctionData.save();
 
+        // Send push notification to user if they have expo push token
+        if (user.expoPushToken) {
+            const expo = new Expo();
+            const messages = [{
+                to: user.expoPushToken,
+                sound: 'default',
+                title: 'Auction Request Approved',
+                body: `Your auction request for ₹${userAuction.amount} has been approved!`,
+            }];
+
+            const chunks = expo.chunkPushNotifications(messages);
+            
+            for (let chunk of chunks) {
+                try {
+                    const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+                    for (const ticket of ticketChunk) {
+                        if (ticket.id) {
+                            await Notification.create({
+                                userId: user._id,
+                                title: 'Auction Request Approved',
+                                body: `Your auction request for ₹${userAuction.amount} has been approved!`,
+                                notificationId: ticket.id
+                            });
+                        } else if (ticket.status === "error") {
+                            console.error(`Push notification failed: ${ticket.message}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error sending push notification:', error);
+                }
+            }
+        }
+
         // Save agent notification if user has an agent
         if (user.agent) {
             const agentNotification = new AgentNotification({
                 agentId: user.agent._id,
                 title: 'User Auction Request Approved',
-                description: `User ${user.name}'s auction request has been approved.`
+                description: `User ${user.name}'s auction request for ₹${userAuction.amount} has been approved.`
             });
             await agentNotification.save();
         }
 
+        // Delete the UserAuctionData after successful approval
+        await UserAuctionData.deleteOne({ _id: auctionId });
+
         res.status(200).json({ 
-            message: "Auction approved successfully"
+            message: "Auction approved successfully and notification sent"
         });
     } catch (error) {
         console.error("Error approving auction:", error);

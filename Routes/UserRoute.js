@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { SetPin, LoginCon, NewUser, LogoutCon, me, RefreshTokenCon, ForgetPin, ChangePin, TokenPush, approvedCompanyExit, rejectCompanyExit } from "../Controller/UserController.js";
+import { SetPin, LoginCon, NewUser, LogoutCon, me, RefreshTokenCon, ForgetPin, ChangePin, TokenPush, approvedCompanyExit, rejectCompanyExit, UpdateUser, UpdateUserLocation } from "../Controller/UserController.js";
 import { verifyToken } from "../utils/jwt.js";
 
 const storage = multer.memoryStorage();
@@ -40,6 +40,8 @@ router.post("/login", LoginCon);
 router.post("/refresh", RefreshTokenCon);
 router.post("/logout", LogoutCon);
 router.post('/newuser', upload.single('profile'), NewUser);
+router.put('/updateuser/:userId', upload.single('profile'), UpdateUser);
+router.put('/update-location/:userId', upload.single('locationImage'), UpdateUserLocation);
 router.post('/token', TokenPush);
 router.get("/me", authenticateUser, me);
 router.post("/approved-company-exit/:id", approvedCompanyExit);

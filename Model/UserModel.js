@@ -98,6 +98,20 @@ const UserSchema = new mongoose.Schema(
     expoPushToken: {
       type: String,
     },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point"
+      },
+      coordinates: {
+        type: [Number],
+        default: undefined
+      }
+    },
+    locationImage: {
+      type: String,
+    },
     chits: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -117,6 +131,9 @@ const UserSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Create geospatial index for location queries
+UserSchema.index({ location: "2dsphere" });
 
 const Counter = mongoose.model("Counter", counterSchema);
 
