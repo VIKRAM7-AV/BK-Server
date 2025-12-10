@@ -668,3 +668,159 @@ export const updateAgent = async (req, res) => {
     return res.status(500).json({ error: error.message || "Server error" });
   }
 };
+
+
+export const paymentEditAccess = async (req, res) => {
+  try {
+    const { id } = req.params; // Get specific agent ID from URL params
+    const { access } = req.body;
+
+    if (typeof access !== 'boolean') {
+      return res.status(400).json({ message: "Access must be a boolean value" });
+    }
+
+    if (!id) {
+      return res.status(400).json({ message: "Agent ID is required" });
+    }
+
+    // Update only the specific agent and return the updated document
+    const result = await Agent.findByIdAndUpdate(
+      id,
+      { paymentEdit: access },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    res.status(200).json({ 
+      message: "Payment edit access updated successfully",
+      agent: {
+        id: result._id,
+        name: result.name,
+        paymentEdit: result.paymentEdit
+      }
+    });
+  } catch (error) {
+    console.error("Error in payment edit access:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
+export const agentPerformance = async (req, res) => {
+  try {
+    const agents = await Agent.find()
+      .select("agentId name phone profile route")
+      .lean();
+
+    if (!agents.length) {
+      return res.status(404).json({ message: "No agents found" });
+    }
+
+    const performanceData = await Promise.all(
+      agents.map(async (agent) => {
+        // Get all users for this agent
+        const users = await User.find({ agent: agent._id })
+          .select("userId name phone profile")
+          .populate({
+            path: "chits",
+            populate: {
+              path: "chitId",
+              select: "groupCode chitValue durationMonths"
+            }
+          })
+          .lean();
+
+        // Group booked chits by month (createdAt) for each user
+        const usersWithMonthlyBreakdown = users.map((user) => {
+          const monthlyChits = {};
+          let totalChitValue = 0;
+          let totalBookings = 0;
+
+          user.chits.forEach((bookedChit) => {
+            if (bookedChit.createdAt && bookedChit.chitId) {
+              const monthYear = new Date(bookedChit.createdAt).toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+              });
+
+              if (!monthlyChits[monthYear]) {
+                monthlyChits[monthYear] = {
+                  chits: [],
+                  totalChitValue: 0,
+                  count: 0
+                };
+              }
+
+              monthlyChits[monthYear].chits.push({
+                GroupUserId: bookedChit.GroupUserId,
+                groupCode: bookedChit.chitId.groupCode,
+                chitValue: bookedChit.chitId.chitValue,
+                collectedAmount: bookedChit.collectedAmount,
+                pendingAmount: bookedChit.pendingAmount,
+                status: bookedChit.status,
+                bookingType: bookedChit.bookingType,
+                createdAt: bookedChit.createdAt
+              });
+
+              monthlyChits[monthYear].totalChitValue += bookedChit.chitId.chitValue || 0;
+              monthlyChits[monthYear].count += 1;
+              totalChitValue += bookedChit.chitId.chitValue || 0;
+              totalBookings += 1;
+            }
+          });
+
+          return {
+            userId: user.userId,
+            name: user.name,
+            phone: user.phone,
+            profile: user.profile,
+            totalBookings,
+            totalChitValue,
+            monthlyBreakdown: monthlyChits
+          };
+        });
+
+        // Calculate agent-level statistics
+        const agentStats = {
+          totalUsers: users.length,
+          totalBookings: usersWithMonthlyBreakdown.reduce((sum, u) => sum + u.totalBookings, 0),
+          totalChitValue: usersWithMonthlyBreakdown.reduce((sum, u) => sum + u.totalChitValue, 0),
+          totalCollected: 0,
+          totalPending: 0
+        };
+
+        // Calculate total collected and pending amounts
+        users.forEach(user => {
+          user.chits.forEach(chit => {
+            agentStats.totalCollected += chit.collectedAmount || 0;
+            agentStats.totalPending += chit.pendingAmount || 0;
+          });
+        });
+
+        return {
+          agent: {
+            agentId: agent.agentId,
+            name: agent.name,
+            phone: agent.phone,
+            profile: agent.profile
+          },
+          statistics: agentStats,
+          users: usersWithMonthlyBreakdown
+        };
+      })
+    );
+
+    res.status(200).json({
+      message: "Agent performance report generated successfully",
+      count: performanceData.length,
+      data: performanceData
+    });
+    
+  } catch (error) {
+    console.error("Error fetching agent performance:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

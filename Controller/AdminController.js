@@ -285,7 +285,10 @@ export const getmonthlyChitusersReport = async (req, res) => {
     const monthlyCollections = await MonthlyCollection.find({}).populate({
       path: "months.payments.bookedChit",
       model : BookedChit,
-      populate: { path: "userId" }
+      populate: [
+        { path: "userId"},
+        { path: "chitId", select: "chitValue totalDueAmount" }
+      ]
     }).populate("agentId");
 
     if (!monthlyCollections || monthlyCollections.length === 0) {

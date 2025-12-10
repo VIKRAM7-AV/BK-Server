@@ -53,6 +53,10 @@ const agentSchema = new mongoose.Schema(
     task: {
       type: String,
     },
+    paymentEdit: {
+      type: Boolean,
+      default: false,
+    },
     monthlyUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,

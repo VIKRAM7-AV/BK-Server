@@ -1,5 +1,5 @@
 import express from "express";
-import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin, Getme,DailyChits, getallUsers, getAllAgents, MonthlyChits, getBookedChitDetails, ChangePin, ArrearDailyChits, ArrearMonthlyChits, updateAgent } from "../Controller/AgentController.js";
+import { NewAgent,SetPin,LoginAgent,RefreshTokenCon,TokenPush, ForgetPin,agentPerformance, Getme,DailyChits, getallUsers, getAllAgents, MonthlyChits, getBookedChitDetails, ChangePin, ArrearDailyChits, ArrearMonthlyChits, updateAgent, paymentEditAccess } from "../Controller/AgentController.js";
 import { verifyToken } from "../utils/jwt.js";
 import multer from "multer";
 
@@ -40,6 +40,8 @@ router.get("/allagents", getAllAgents);
 router.get("/arreardaily/:agentId", ArrearDailyChits);
 router.get("/arrearmonthly/:agentId", ArrearMonthlyChits);
 router.put('/updateagent/:id', upload.single('image'), updateAgent);
+router.put('/paymentaccess/:id', paymentEditAccess);
+router.get('/agentperformance',agentPerformance);
 
 
 export default router;
