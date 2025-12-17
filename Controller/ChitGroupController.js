@@ -96,7 +96,7 @@ export const BookingChit = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = id;
-    const { chitId, bookingType } = req.body;
+    const { chitId, bookingType, createdAt } = req.body;
 
     if (!chitId || !userId || !bookingType) {
       return res
@@ -186,8 +186,8 @@ export const BookingChit = async (req, res) => {
     });
     await auction.save();
 
-    // Calculate lastDate based on durationMonths from chit group
-    const startDate = new Date();
+    // Use createdAt from body if provided, else current date
+    const startDate = createdAt ? new Date(createdAt) : new Date();
     const lastDate = new Date(startDate);
     lastDate.setMonth(lastDate.getMonth() + chit.durationMonths);
 
@@ -203,6 +203,7 @@ export const BookingChit = async (req, res) => {
       status: "active",
       month: startDate,
       lastDate: lastDate,
+      createdAt: startDate
     });
 
     await bookedChit.save();

@@ -776,17 +776,6 @@ export const AuctionComplete = async (req, res) => {
         const { cheque } = req.body;
         const chequeImageFile = req.file;
 
-        if (!chequeImageFile) {
-            return res.status(400).json({ 
-                message: "Cheque image is required",
-                debug: {
-                    body: req.body,
-                    file: req.file,
-                    files: req.files
-                }
-            });
-        }
-
         const auction = await Auction.findById(id).populate({
             path: 'userId',
             populate: { path: 'agent', select: 'expoPushToken name' },
@@ -797,23 +786,25 @@ export const AuctionComplete = async (req, res) => {
             return res.status(404).json({ message: "Auction not found" });
         }
 
-        // Upload the file to Cloudinary using the file path from multer
-        const chequeImagePath = await cloudinary.uploader.upload(chequeImageFile.path, {
-            folder: 'cheque_images',
-            resource_type: 'auto'
-        });
+        if (chequeImageFile) {
+            // Upload the file to Cloudinary using the file path from multer
+            const chequeImagePath = await cloudinary.uploader.upload(chequeImageFile.path, {
+                folder: 'cheque_images',
+                resource_type: 'auto'
+            });
 
-        // Step 2: Update auction status to complete
+            auction.chequeImage = chequeImagePath.secure_url;
+        }
 
+        // Update auction status to complete
         auction.status = "complete";
         auction.cheque = cheque;
-        auction.chequeImage = chequeImagePath.secure_url
         await auction.save();
 
         const user = auction.userId;
         const Amount = auction.payment;
 
-        // Step 3: Send Push to Customer
+        // Send Push to Customer
         if (user?.expoPushToken && Expo.isExpoPushToken(user.expoPushToken)) {
             const customerMessage = {
                 to: user.expoPushToken,
@@ -841,7 +832,6 @@ export const AuctionComplete = async (req, res) => {
                 console.error('Error sending push to customer:', err.message);
             }
         }
-
 
         res.status(200).json({ message: "Auction completed successfully", auction });
     } catch (error) {

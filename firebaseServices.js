@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import User from './Model/UserModel.js';
 
 dotenv.config();
 
@@ -42,11 +43,29 @@ if (isFirebaseConfigured) {
 
 // Save push token
 export const saveToken = async (userId, token) => {
+  // If Firebase DB isn't available, fall back to storing token in MongoDB User model
   if (!database) {
-    console.warn('⚠️  Firebase not configured. Token save skipped.');
-    return false;
+    try {
+      if (!userId || !token) {
+        throw new Error('User ID and token are required');
+      }
+      const filter = { $or: [{ _id: userId }, { userId: userId }] };
+      const update = { expoPushToken: token };
+      const options = { new: true };
+      const user = await User.findOneAndUpdate(filter, update, options);
+      if (user) {
+        console.log('✅ Token saved to MongoDB for user:', userId);
+        return true;
+      } else {
+        console.warn('⚠️  User not found in MongoDB, token not saved:', userId);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error saving token to MongoDB fallback:', error);
+      throw error;
+    }
   }
-  
+
   try {
     if (!userId || !token) {
       throw new Error('User ID and token are required');
@@ -63,11 +82,22 @@ export const saveToken = async (userId, token) => {
 
 // Get push token
 export const getToken = async (userId) => {
+  // If Firebase DB isn't available, try reading token from MongoDB User model
   if (!database) {
-    console.warn('⚠️  Firebase not configured. Token retrieval skipped.');
-    return null;
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+      const filter = { $or: [{ _id: userId }, { userId: userId }] };
+      const user = await User.findOne(filter).select('expoPushToken');
+      if (!user) return null;
+      return user.expoPushToken || null;
+    } catch (error) {
+      console.error('❌ Error retrieving token from MongoDB fallback:', error);
+      throw error;
+    }
   }
-  
+
   try {
     if (!userId) {
       throw new Error('User ID is required');

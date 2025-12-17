@@ -8,23 +8,18 @@ const counterSchema = new mongoose.Schema({
 const NomineeSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
   },
   dob: {
     type: Date,
-    required: true,
   },
   relation: {
     type: String,
-    required: true,
   },
   permanentAddress: {
     type: String,
-    required: true,
   },
   phone: {
     type: Number,
-    required: true,
   },
 });
 
@@ -40,11 +35,9 @@ const UserSchema = new mongoose.Schema(
     },
     profile: {
       type: String,
-      required: true,
     },
     dob: {
       type: Date,
-      required: true,
     },
     phone: {
       type: Number,
@@ -53,38 +46,30 @@ const UserSchema = new mongoose.Schema(
     },
     occupation: {
       type: String,
-      required: true,
     },
     monthlyIncome: {
       type: Number,
-      required: true,
     },
     permanentAddress: {
       type: String,
-      required: true,
     },
     occupationAddress: {
       type: String,
-      required: true,
     },
     password: {
       type: String,
-      required: true,
       default: "0000",
     },
     nominee: {
       type: NomineeSchema,
-      required: true,
     },
     route: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "WorkerRoute",
-      required: true
     },
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent",
-      required: true
     },
     role: {
       type: String,
@@ -101,12 +86,10 @@ const UserSchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum: ["Point"],
-        default: "Point"
+        enum: ["Point"]
       },
       coordinates: {
-        type: [Number],
-        default: undefined
+        type: [Number]
       }
     },
     locationImage: {
@@ -150,6 +133,18 @@ UserSchema.pre("save", async function (next) {
       return next(error);
     }
   }
+  // Remove incomplete or invalid GeoJSON `location` objects so MongoDB geospatial
+  // indexers don't encounter documents with a type but missing coordinates.
+  if (this.location) {
+    const coords = this.location.coordinates;
+    const validCoords = Array.isArray(coords) && coords.length === 2 && coords.every(c => typeof c === 'number' && Number.isFinite(c));
+    if (!validCoords) {
+      this.location = undefined;
+    } else {
+      this.location.type = 'Point';
+    }
+  }
+
   next();
 });
 

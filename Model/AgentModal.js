@@ -16,24 +16,18 @@ const agentSchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      required: true,
     },
     profile: {
       type: String,
-      required: true,
     },
     dob: {
       type: Date,
-      required: true,
     },
     phone: {
-      type: Number,
-      required: true,
-      unique: true,
+      type: Number
     },
     permanentAddress: {
       type: String,
-      required: true,
     },
     password: {
       type: String,

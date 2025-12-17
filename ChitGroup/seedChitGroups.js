@@ -6,7 +6,7 @@ import fs from "fs";
 // Load JSON data
 const chitGroups = JSON.parse(fs.readFileSync("./chit_groups.json", "utf-8"));
 
-const MONGO_URI = "mongodb+srv://vikramria195:Vikram74@bkchit.nwti8kq.mongodb.net/?retryWrites=true&w=majority&appName=BKChit";
+const MONGO_URI = "mongodb+srv://bkchitspvtltd_db_user:seoHqyUhOM6BDGVn@cluster0.wtr5c7y.mongodb.net/bkchit?retryWrites=true&w=majority&appName=BKChit";
 
 const seedData = async () => {
   try {

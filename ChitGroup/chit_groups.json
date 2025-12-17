@@ -2326,6 +2326,7 @@
     "chitValue": 2500000,
     "durationMonths": 25,
     "monthlyContribution": 100000,
+    "dailyContribution": 3500,
     "totalDueAmount": 2187500,
     "totalDividend": 312500,
     "auctionTable": [

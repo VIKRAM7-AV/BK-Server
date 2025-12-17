@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from "../utils/jwt.js";
-import { LoginAdmin, RefreshTokenCon, Getme, NewAdmin, getallUsers,ResetPassword,AllAgents, getdailyChitusers, getdailyChitusersReport,SendOTP, VerifyOTP, getmonthlyChitusers, getmonthlyChitusersReport, GetCountUsers, DueList, ArrearList } from '../Controller/AdminController.js';
+import { LoginAdmin, RefreshTokenCon, Getme, NewAdmin,AllBookedChitsDue,getallUsers,AllBookedChits,ResetPassword,AllAgents, getdailyChitusers, getdailyChitusersReport,SendOTP, VerifyOTP, getmonthlyChitusers, getmonthlyChitusersReport, GetCountUsers, DueList, ArrearList, chithistory, AllBookedChitsDues } from '../Controller/AdminController.js';
 
 export const authenticateAdmin = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -35,5 +35,9 @@ router.post('/resetpassword', ResetPassword);
 router.get('/alldues', DueList)
 router.get('/arrearlist',ArrearList)
 router.get('/allagents',AllAgents)
+router.get('/bookedchits',AllBookedChits);
+router.get('/allbookedchitsdue',AllBookedChitsDue)
+router.get('/chithistory',chithistory);
+router.get('/allchitsdue',AllBookedChitsDues);
 
 export default router;
